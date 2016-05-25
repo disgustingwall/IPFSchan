@@ -492,8 +492,6 @@ function decryptToChannel(message)
 	//TODO: set default return value to message value?
 	var returnValue = "";
 	
-
-	
 	try
 	{
 		returnValue = CryptoJS.AES.decrypt(message, channelPassword.toString() + channel.toString());
