@@ -116,6 +116,9 @@ var siteList = ["http://localhost:12462", "https://ipfschan.herokuapp.com"];
 var postText = {};
 
 
+var encryptedPosts = true;
+
+
 function escapeHTML(text)
 {
 	var entityMap = {
@@ -489,6 +492,8 @@ function decryptToChannel(message)
 	//TODO: set default return value to message value?
 	var returnValue = "";
 	
+
+	
 	try
 	{
 		returnValue = CryptoJS.AES.decrypt(message, channelPassword.toString() + channel.toString());
@@ -497,6 +502,11 @@ function decryptToChannel(message)
 	catch (e)
 	{
 		console.log(e);
+	}
+	
+	if (returnValue === "" && encryptedPosts === true)
+	{
+		returnValue = message;
 	}
 	
 	return returnValue;
@@ -935,8 +945,8 @@ function postButtonListener(ev)
 		var fileParts = [];
 		
 		
-		//while final file size is above 262 KB
-		while(theFile.toString().length > cutOff)
+		//while final file size is above 262 KB and encryption is enabled
+		while(theFile.toString().length > cutOff && encryptedPosts === true)
 		{
 			fileParts.push(theFile.substr(0, cutOff));
 			theFile = theFile.substr(cutOff);
@@ -953,7 +963,7 @@ function postButtonListener(ev)
 		var tooLarge = false;
 		for (var i = 1; i < files.length; i++)
 		{
-			if (files[i].toString().length > cutOff)
+			if (files[i].toString().length > cutOff && encryptedPosts === true)
 			{
 				tooLarge = true;
 				files[i] = partition(files[i]);
@@ -1001,7 +1011,7 @@ function postButtonListener(ev)
 		}
 		files[0] = JSON.stringify(files[0]);
 		
-		if (files[0].toString().length > cutOff)
+		if (files[0].toString().length > cutOff && encryptedPosts === true)
 		{
 			postResponseDisplay("Your post is too long; Compressing");
 			firstFileRun = false;
@@ -1022,8 +1032,13 @@ function postButtonListener(ev)
 			callback = function(){return;}
 		}
 		
+		var encrypted = postText.toString();
 		
-		var encrypted = CryptoJS.AES.encrypt(postText.toString(), channelPassword.toString() + channel.toString());
+		if (encryptedPosts === true)
+		{
+			encrypted = CryptoJS.AES.encrypt(encrypted.toString(), channelPassword.toString() + channel.toString());
+		}
+		
 		var encryptedContent = encrypted.toString();
 		
 		var data = new FormData();
