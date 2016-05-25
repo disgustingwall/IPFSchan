@@ -20,9 +20,6 @@ var minimumBlockTime = 10 * 1000; //ten seconds
 var maximumBlockTime = 60 * 60 * 1000; //one hour
 //set target for number of blocks per hour
 var targetBlocksPerHour = 6;
-//setting of whether pinning is allowed or not
-//unused currently
-var pinningAllowed = false;
 
 //track when emergency refreshes are allowed to prevent minting in /uploaded from triggering multiple times
 var lastMailboxRefresh = 0;
