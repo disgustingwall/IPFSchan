@@ -308,7 +308,7 @@ function renderFileCallback(responseText, extra)
 			var tmpFileContent;
 			try
 			{
-				tmpFileContent = JSON.parse(decryptToChannel(postText[extra["postJSON"]["files"][extra["fileIndex"]]["content"][i]]))["content"];
+				tmpFileContent = JSON.parse(decryptToChannel(postText[extra["postJSON"]["files"][extra["fileIndex"]]["content"][i]]).replace("\n", "\\n"))["content"];
 			}
 			catch (e)
 			{
@@ -387,7 +387,7 @@ function renderFile(postJSON, fileIndex, replaceID)
 {
 	try
 	{
-		postJSON = JSON.parse(postJSON);
+		postJSON = JSON.parse(postJSON.replace("\n", "\\n"));
 	}
 	catch (e)
 	{
@@ -494,8 +494,7 @@ function decryptToChannel(message)
 	
 	try
 	{
-		returnValue = CryptoJS.AES.decrypt(message, channelPassword.toString() + channel.toString());
-		returnValue = returnValue.toString(CryptoJS.enc.Utf8);
+		returnValue = CryptoJS.AES.decrypt(message, channelPassword.toString() + channel.toString()).toString(CryptoJS.enc.Utf8);
 	}
 	catch (e)
 	{
@@ -521,7 +520,7 @@ function renderPost(responseText, extra)
 	
 	try
 	{
-		postObject = JSON.parse(responseContent);
+		postObject = JSON.parse(responseContent.replace("\n", "\\n"));
 	}
 	catch (e)
 	{
@@ -649,7 +648,7 @@ function renderMailbox(responseText, parameterObject)
 	
 	
 	var originalPostListLength = postList.length;
-	var responseObject = JSON.parse(responseText);
+	var responseObject = JSON.parse(responseText.replace("\n", "\\n"));
 	var mailboxes = parameterObject["mailboxes"];
 	
 	
@@ -998,7 +997,7 @@ function postButtonListener(ev)
 		files[0]["files"] = [];
 		for (var i = 0; files.length - 1 > 0; i++)
 		{
-			files[0]["files"][i] = JSON.parse(files.splice(files.length - 1));
+			files[0]["files"][i] = JSON.parse(files.splice(files.length - 1).replace("\n", "\\n"));
 		}
 		//TODO: only fill header if timestamps are turned on
 		files[0]["time"] = Date.now();
@@ -1047,7 +1046,7 @@ function postButtonListener(ev)
 		request.open("POST", siteToLoadFrom + "/uploaded", true);
 		request.onload = function(oEvent) {
 			if (request.readyState == 4 && request.status == 200) {
-				var responseObject = JSON.parse(request.responseText);
+				var responseObject = JSON.parse(request.responseText.replace("\n", "\\n"));
 				var postResponseText = "<p>Part successfully uploaded<br />Hash: " + responseObject["t"] + "</p>";
 				
 				postResponseDisplay(postResponseText);
