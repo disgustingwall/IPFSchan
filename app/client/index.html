@@ -997,7 +997,7 @@ function postButtonListener(ev)
 		files[0]["files"] = [];
 		for (var i = 0; files.length - 1 > 0; i++)
 		{
-			files[0]["files"][i] = JSON.parse(files.splice(files.length - 1));
+			files[0]["files"][i] = JSON.parse(files.pop().replace("\n", "\\n"));
 		}
 		//TODO: only fill header if timestamps are turned on
 		files[0]["time"] = Date.now();
