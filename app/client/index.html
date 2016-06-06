@@ -1008,7 +1008,7 @@ function postButtonListener(ev)
 		}
 		files[0] = JSON.stringify(files[0]);
 		
-		if (files[0].toString().length > cutOff && encryptedPosts === true)
+		if (files[0].toString().length > cutOff)
 		{
 			postResponseDisplay("Your post is too long; Compressing");
 			firstFileRun = false;
