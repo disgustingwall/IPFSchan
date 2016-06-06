@@ -943,7 +943,7 @@ function postButtonListener(ev)
 		
 		
 		//while final file size is above 262 KB and encryption is enabled
-		while(theFile.toString().length > cutOff && encryptedPosts === true)
+		while(theFile.toString().length > cutOff)
 		{
 			fileParts.push(theFile.substr(0, cutOff));
 			theFile = theFile.substr(cutOff);
@@ -997,7 +997,7 @@ function postButtonListener(ev)
 		files[0]["files"] = [];
 		for (var i = 0; files.length - 1 > 0; i++)
 		{
-			files[0]["files"][i] = JSON.parse(files.splice(files.length - 1).replace("\n", "\\n"));
+			files[0]["files"][i] = JSON.parse(files.splice(files.length - 1));
 		}
 		//TODO: only fill header if timestamps are turned on
 		files[0]["time"] = Date.now();
@@ -1057,7 +1057,7 @@ function postButtonListener(ev)
 			{
 				console.log(request.status);
 				postResponseDisplay("<p>Something went wrong with an upload. Sorry.</p>");
-				return responseObject["t"];
+				return false;
 			}
 		};
 		
