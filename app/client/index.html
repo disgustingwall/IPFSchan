@@ -631,6 +631,28 @@ function renderPosts(start, end)
 	return 0;
 }
 
+function clearIPFSHashArray(hashArray)
+{
+	//remove blanks
+	hashArray = hashArray.filter(function(element, position, array) {
+		if (element.length !== 46)
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	});
+
+	//remove duplicates
+	hashArray = hashArray.filter(function(element, position, array) {
+		return array.indexOf(element) === position;
+	});
+	
+	return hashArray;
+}
+
 function renderMailbox(responseText, parameterObject)
 {
 	var continueUntilPost = parameterObject["continueUntilPost"];
@@ -658,6 +680,8 @@ function renderMailbox(responseText, parameterObject)
 		{
 			mailboxes.push(responseObject["o"][i]);
 		}
+		
+		mailboxes = cleanIPFSHashArray(mailboxes);
 	}
 	
 	if (responseObject.hasOwnProperty("n"))
@@ -665,29 +689,23 @@ function renderMailbox(responseText, parameterObject)
 		for(var i = 0; i < responseObject["n"].length; i++)
 		{
 			postList.push(responseObject["n"][i]);
-			postList = postList.filter(function(element, position, array) {
-				return array.indexOf(element) === position;
-			});
 		}
+		
+		postList = cleanIPFSHashArray(postList);
 	}
 	
-	
-	//clear duplicates from mailboxes
-	mailboxes = mailboxes.filter(function(element, position, array) {
-		return array.indexOf(element) === position;
-	});
-	//clear blanks from mailboxes
-	mailboxes = mailboxes.filter(function(element, position, array) {
-		if (element.length !== 46)
+	if (responseObject.hasOwnProperty("u"))
+	{
+		for(var i = 0; i < responseObject["u"].length; i++)
 		{
-			return false;
+			mailboxes.push(responseObject["u"][i]);
+			postList.push(responseObject["n"][i]);
 		}
-		return true;
-	});
-	//clear duplicates from postList
-	postList = postList.filter(function(element, position, array){
-		return array.indexOf(element) === position;
-	});
+		
+		mailboxes = cleanIPFSHashArray(mailboxes);
+		postList = cleanIPFSHashArray(postList);
+	}
+	
 	
 	globalMailboxes = mailboxes;
 	
