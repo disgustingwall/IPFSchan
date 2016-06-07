@@ -31,6 +31,7 @@ var postsToMerge = [];
 var mailboxesToMerge = [];
 var mailboxes = [];
 var foreignMailboxes = [];
+var userSubmittedHashes = [];
 var mailboxCreationTimes = [];
 //blank entries are to give the site respite if it has itself in its array
 var peerSitesList = ["https://ipfschan.herokuapp.com"];
@@ -229,7 +230,7 @@ function createMailboxCallback()
 	}
 	
 	//only run if there is something to commit
-	if (mailboxesToMerge.length !== 0 || postsToMerge.length !== 0)
+	if (mailboxesToMerge.length > 0 || postsToMerge.length > 0 || userSubmittedHashes.length > 0)
 	{
 		var newMailboxJSON = {};
 		var oldMailbox = newestMailbox.toString();
@@ -272,6 +273,23 @@ function createMailboxCallback()
 			if (newMailboxJSON["n"].length <= 0)
 			{
 				delete newMailboxJSON["n"];
+			}
+		}
+		
+		if (userSubmittedHashes.length > 0)
+		{
+			newMailboxJSON["u"] = userSubmittedHashes;
+			
+			userSubmittedHashes = [];
+			
+			//remove duplicates
+			newMailboxJSON["u"] = newMailboxJSON["u"].filter(function(element, position, array) {
+				return array.indexOf(element) === position;
+			});
+			
+			if (newMailboxJSON["u"].length <= 0)
+			{
+				delete newMailboxJSON["u"];
 			}
 		}
 		
@@ -720,7 +738,7 @@ function main()
 		
 		//scrape postText for URLs and add them to peerSitesList
 		//TODO: better URL regex
-		newURLmatch = postText.match(/(((https?:\/\/)?(([\da-z\.-]+)\.([a-z\.]{2,6})))(:(\d+))?)([\/\w \.-]*)*\/?/g);
+		var newURLmatch = postText.match(/(((https?:\/\/)?(([\da-z\.-]+)\.([a-z\.]{2,6})))(:(\d+))?)([\/\w \.-]*)*\/?/g);
 		
 		if (newURLmatch)
 		{
@@ -746,7 +764,16 @@ function main()
 			console.log(JSON.stringify(peerSitesList));
 		}
 		
+		//TODO: IPFS hash scraper
+		var IPFSHashMatch = postText.match(/[\w]{46}/g);
 		
+		if (IPFSHashMatch)
+		{
+			IPFSHashMatch.forEach(function(hash, matchNumber) {
+				//TODO: add to "unknown" list for adding to mailboxes
+				userSubmittedHashes.push(hash);
+			});
+		}
 		ipfs.add(new Buffer(postText.toString()), function(err, res) {
 			if(err || !res)
 			{
