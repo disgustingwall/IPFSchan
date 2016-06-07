@@ -694,6 +694,8 @@ function renderMailbox(responseText, parameterObject)
 		postList = cleanIPFSHashArray(postList);
 	}
 	
+	//disabled due to problems with attempting to resolve a nonexistent hash
+	/*
 	if (responseObject.hasOwnProperty("u"))
 	{
 		for(var i = 0; i < responseObject["u"].length; i++)
@@ -705,6 +707,7 @@ function renderMailbox(responseText, parameterObject)
 		mailboxes = cleanIPFSHashArray(mailboxes);
 		postList = cleanIPFSHashArray(postList);
 	}
+	/**/
 	
 	
 	globalMailboxes = mailboxes;

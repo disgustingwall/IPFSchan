@@ -764,7 +764,9 @@ function main()
 			console.log(JSON.stringify(peerSitesList));
 		}
 		
-		//TODO: IPFS hash scraper
+		//IPFS hash scraper
+		//disabled: trying to load hashes that aren't real causes problems in the client
+		/*
 		var IPFSHashMatch = postText.match(/[\w]{46}/g);
 		
 		if (IPFSHashMatch)
@@ -774,6 +776,8 @@ function main()
 				userSubmittedHashes.push(hash);
 			});
 		}
+		/**/
+		
 		ipfs.add(new Buffer(postText.toString()), function(err, res) {
 			if(err || !res)
 			{
