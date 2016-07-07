@@ -460,14 +460,31 @@ function addToPeerSites(newArr)
 function publishMailboxPull(callback)
 {
 	var addResultToLists = false;
+	var publishedObject = {};
 	
 	if (!callback)
 	{
-		callback = function(){};
+		callback = function(publishedObject){
+			console.log("Successfully added mailbox and peers to lists");
+			
+			try
+			{
+				console.log("publishedObject: ");
+				console.log(JSON.stringify(publishedObject));
+			}
+			catch(e)
+			{
+				console.log("Something went wrong when trying to display publishedObject")
+				console.log(e);
+			}
+			
+			console.log("mailboxesToMerge: ");
+			console.log(mailboxesToMerge);
+		};
+		
 		addResultToLists = true;
 	}
 	
-	var publishedObject = {};
 	
 	var finishPublish = function (str, callback){
 		try
@@ -581,10 +598,20 @@ function publishMailboxPush()
 	});
 }
 
+function killServer(exitCode)
+{
+	if (exitCode == null)
+	{
+		exitCode = 1;
+	}
+	
+	process.exit(exitCode);
+}
+
 function quit()
 {
 	console.log("Server closed. Exiting process");
-	process.exit(0);
+	killServer(0);
 }
 
 function main()
@@ -1013,6 +1040,7 @@ function main()
 	process.on('SIGTERM', function () {
 		console.log("Received SIGTERM. Closing server with orders to exit process afterwards");
 		server.close(quit);
+		setTimeout(killServer, 10 * 1000, 3);
 	});
 	
 	process.on('SIGINT', function () {
@@ -1020,6 +1048,7 @@ function main()
 		console.log();
 		console.log("Received SIGINT. Closing server with orders to exit process afterwards");
 		server.close(quit);
+		setTimeout(killServer, 10 * 1000, 2);
 	});
 }
 
