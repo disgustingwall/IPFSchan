@@ -608,10 +608,37 @@ function killServer(exitCode)
 	process.exit(exitCode);
 }
 
-function quit()
+function quit(exitCode)
 {
+	if (exitCode == null)
+	{
+		exitCode = 1;
+	}
+	
 	console.log("Server closed. Exiting process");
 	killServer(0);
+}
+
+function delayedKill(exitCode)
+{
+	if (exitCode == null)
+	{
+		exitCode = 4;
+	}
+	
+	console.log("The process took too long to exit");
+	console.log("Forcing exit");
+	killServer(exitCode);
+}
+
+function delayKill(exitCode)
+{
+	if (exitCode == null)
+	{
+		exitCode = 3;
+	}
+	
+	setTimeout(delayedKill, 10 * 1000, exitCode);
 }
 
 function main()
@@ -1040,7 +1067,7 @@ function main()
 	process.on('SIGTERM', function () {
 		console.log("Received SIGTERM. Closing server with orders to exit process afterwards");
 		server.close(quit);
-		setTimeout(killServer, 10 * 1000, 3);
+		delayKill(3);
 	});
 	
 	process.on('SIGINT', function () {
@@ -1048,7 +1075,7 @@ function main()
 		console.log();
 		console.log("Received SIGINT. Closing server with orders to exit process afterwards");
 		server.close(quit);
-		setTimeout(killServer, 10 * 1000, 2);
+		delayKill(2);
 	});
 }
 
