@@ -581,6 +581,12 @@ function publishMailboxPush()
 	});
 }
 
+function quit()
+{
+	console.log("Server closed. Exiting process");
+	process.exit(0);
+}
+
 function main()
 {
 	var cfgContents = "";
@@ -1000,8 +1006,19 @@ function main()
 		response.end("boop");
 	});
 	
-	app.listen(app.get('port'), function() {
+	var server = app.listen(app.get('port'), function() {
 		console.log('Node app is running on port', app.get('port'));
+	});
+	
+	process.on('SIGTERM', function () {
+		console.log("Received SIGTERM. Closing server with orders to exit process afterwards");
+		server.close(quit);
+	});
+	
+	process.on('SIGINT', function () {
+		console.log();
+		console.log("Received SIGINT. Closing server with orders to exit process afterwards");
+		server.close(quit);
 	});
 }
 
