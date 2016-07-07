@@ -1016,6 +1016,7 @@ function main()
 	});
 	
 	process.on('SIGINT', function () {
+		//make sure there's a newline after the ^C character
 		console.log();
 		console.log("Received SIGINT. Closing server with orders to exit process afterwards");
 		server.close(quit);
