@@ -33,6 +33,7 @@ video, img, audio
 </style>
 	</head>
 	<body style="margin:0;">
+		<div id="postResponse" style="position: fixed; right: 0px; top: 0px; background-color: #F0F0F0; margin: 10px;"></div>
 		<div id="content" style="margin:8;">
 			<div id="welcome"><p>Welcome to IPFSchan. For instructions and information, go to <a href="#instructions">the bottom of this page</a></p></div>
 			<br />
@@ -64,8 +65,6 @@ video, img, audio
 					<input type="submit" value="Submit" id="submit" name="submit">
 				</p>
 			</div>
-			<div id="postResponse" style="position: fixed; right: 0px; top: 0px; background-color: #F0F0F0;"></div>
-			<br />
 			<div id="posts"></div>
 			<br />
 			<div id="loadNextHolder">
@@ -913,6 +912,7 @@ function postResponseDisplay(text)
 	
 	
 	newDiv.id = randomId;
+	newDiv.style = "margin: 10px;";
 	newDiv.innerHTML = text;
 	
 	
