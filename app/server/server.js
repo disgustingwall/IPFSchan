@@ -104,6 +104,7 @@ function cleanMailboxCreationTimes(callback)
 	}
 	
 	var currentTime = Date.now();
+	
 	//remove all dates older than one hour
 	while(mailboxCreationTimes[0] < currentTime - (60 * 60 * 1000))
 	{
