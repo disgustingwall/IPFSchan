@@ -240,8 +240,8 @@ function createMailboxCallback()
 		//TODO: check if this mailbox chain gets to new posts before getting back to all previously included mailboxes
 		if (mailboxesToMerge.length > 0 || oldMailbox)
 		{
-			newMailboxJSON["o"] = mailboxesToMerge;
-			mailboxesToMerge = [];
+			//save 128 or less mailboxes staged to be merged in the newMailboxJSON object
+			newMailboxJSON["o"] = mailboxesToMerge.splice(0, 128);
 			
 			if (oldMailbox)
 			{
@@ -261,9 +261,8 @@ function createMailboxCallback()
 		
 		if (postsToMerge.length > 0)
 		{
-			newMailboxJSON["n"] = postsToMerge;
-			
-			postsToMerge = [];
+			//save 128 or less mailboxes staged to be merged in the newMailboxJSON object
+			newMailboxJSON["n"] = postsToMerge.splice(0, 128);
 			
 			//remove duplicates
 			newMailboxJSON["n"] = newMailboxJSON["n"].filter(function(element, position, array) {
