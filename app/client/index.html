@@ -531,9 +531,7 @@ function renderPost(responseText, extra)
 		return loadNext(true);
 	}
 	
-	var disableChannelCheck = true;
-	
-	if ((postObject.hasOwnProperty("type") && postObject["type"] == "ipfschan.post") && (disableChannelCheck || (postObject.hasOwnProperty("channel") && postObject["channel"] == document.getElementById("channel").value)))
+	if ((postObject.hasOwnProperty("type") && postObject["type"] == "ipfschan.post") && (postObject.hasOwnProperty("channel") && postObject["channel"] == document.getElementById("channel").value))
 	{
 		if (postObject.hasOwnProperty("content"))
 		{
@@ -1022,6 +1020,7 @@ function postButtonListener(ev)
 		files[0] = jsonObject;
 		files[0]["type"] = "ipfschan.post";
 		files[0]["files"] = [];
+		files[0]["channel"] = channel;
 		for (var i = 0; files.length - 1 > 0; i++)
 		{
 			files[0]["files"][i] = JSON.parse(files.pop().replace("\n", "\\n"));
