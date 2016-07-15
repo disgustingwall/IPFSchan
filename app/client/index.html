@@ -3,6 +3,18 @@
 		<script type="text/javascript" src="QmZiphmuinFdQpQD4DPDuArAoaoQ4ciMtnMxEhrAVEjURY"></script>
 		<title>IPFSchan</title>
 		<style>
+.padded
+{
+	padding: 10px;
+	margin: 0;
+}
+
+.unpadded
+{
+	margin: 0;
+	padding: 0;
+}
+
 .link
 {
 	cursor: pointer;
@@ -33,7 +45,7 @@ video, img, audio
 </style>
 	</head>
 	<body style="margin:0;">
-		<div id="postResponse" style="position: fixed; right: 0px; top: 0px; background-color: #F0F0F0; margin: 10px;"></div>
+		<div id="postResponse" style="position: fixed; right: 0px; top: 0px; background-color: #F0F0F0; margin: 10px; max-width: 100%;"></div>
 		<div id="content" style="margin:8;">
 			<div id="welcome"><p>Welcome to IPFSchan. For instructions and information, go to <a href="#instructions">the bottom of this page</a></p></div>
 			<br />
@@ -324,7 +336,7 @@ function renderFileCallback(responseText, extra)
 		
 		if (fileMatches[1] === "data:" && (fileMatches[4] === "video" || fileMatches[4] === "image" || fileMatches[4] === "audio"))
 		{
-			displayContent = "<p>File: " + filename + " (" + fileMatches[3] + ")</p>";
+			displayContent = "<p class='unpadded'>File: " + filename + " (" + fileMatches[3] + ")</p>";
 			
 			//TODO: make this dependent on a checkbox, because it seems to cause immense lag
 			displayContent += "<p><a href='" + fileContent + "' download = '" + filename + "'>Download this file</a></p>";
@@ -372,6 +384,7 @@ function renderFileCallback(responseText, extra)
 			//create html element
 			var newDiv = document.createElement('div');
 			newDiv.style.wordBreak = "keep-all";
+			newDiv.className = "padded";
 			newDiv.innerHTML = displayContent;
 			
 			//insert the final html
@@ -435,7 +448,7 @@ function appendPost(postContent, postHash, postReferenceHashes)
 	
 	newDiv.className="postHolder";
 	newDiv.id = postHash;
-	newDiv.innerHTML =  "<a href='#" + postHash + "' class='post_anchor'>" + postHash + "</a><br />" + "<p>" + postContent + "</p>";
+	newDiv.innerHTML =  "<p class='padded'><a href='#" + postHash + "' class='post_anchor'>" + postHash + "</a></p>" + postContent;
 	
 	var insertBeforeElement = null;
 	var margin;
@@ -580,7 +593,7 @@ function renderPost(responseText, extra)
 			}
 			else
 			{
-				postContent = postObject["user"] + postContent;
+				postContent = postObject["user"];
 			}
 		}
 		
@@ -592,12 +605,12 @@ function renderPost(responseText, extra)
 			}
 			else
 			{
-				postContent = new Date(postObject["time"]) + postContent;
+				postContent = new Date(postObject["time"]);
 			}
 		}
 		
 		
-		postContent = "<p>" + postContent + "</p>";
+		postContent = "<p class='padded'>" + postContent + "</p>";
 		
 		//add file objects
 		//TODO: replicate this in renderFile so that doubly compressed posts load properly
@@ -605,7 +618,7 @@ function renderPost(responseText, extra)
 		{
 			var randomText = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 10);
 			var uniqueID = escapeHTML(postObject["files"][i]["title"] + "-" + randomText);
-			postContent = "<div id='" + uniqueID + "' onclick=\"renderFile('" + escapeHTML(JSON.stringify(postObject)) + "', " + i + ", \'" + uniqueID + "\')\" class='link'>" + escapeHTML(postObject["files"][i]["title"]) + " (Estimated size: " + escapeHTML(postObject["files"][i]["content"].length) * fileSizeCutOff / 1024 + " kilobytes)</div>" + postContent;
+			postContent = "<div id='" + uniqueID + "' onclick=\"renderFile('" + escapeHTML(JSON.stringify(postObject)) + "', " + i + ", \'" + uniqueID + "\')\" class='link padded'>" + escapeHTML(postObject["files"][i]["title"]) + " (Estimated size: " + escapeHTML(postObject["files"][i]["content"].length) * fileSizeCutOff / 1024 + " kilobytes)</div>" + postContent;
 		}
 		
 		//TODO: only append / scroll to if date is newer than variable setting or user has enabled historic posts
@@ -917,8 +930,7 @@ function postResponseDisplay(text)
 	
 	
 	newDiv.id = randomId;
-	newDiv.style = "margin: 10px;";
-	newDiv.innerHTML = text;
+	newDiv.innerHTML = "<p class='padded'>" + text + "</p>";
 	
 	
 	document.getElementById("postResponse").appendChild(newDiv);
@@ -944,7 +956,7 @@ function postButtonListener(ev)
 	
 	
 	
-	postResponseDisplay("<p>Beginning upload</p>");
+	postResponseDisplay("Beginning upload");
 	
 	
 	var files = [];
@@ -1073,7 +1085,7 @@ function postButtonListener(ev)
 		request.onload = function(oEvent) {
 			if (request.readyState == 4 && request.status == 200) {
 				var responseObject = JSON.parse(request.responseText.replace("\n", "\\n"));
-				var postResponseText = "<p>Part successfully uploaded<br />Hash: " + responseObject["t"] + "</p>";
+				var postResponseText = "Part successfully uploaded. Hash: " + responseObject["t"];
 				
 				postResponseDisplay(postResponseText);
 				
@@ -1082,7 +1094,7 @@ function postButtonListener(ev)
 			else
 			{
 				console.log(request.status);
-				postResponseDisplay("<p>Something went wrong with an upload. Sorry.</p>");
+				postResponseDisplay("Something went wrong with an upload. Sorry.");
 				return false;
 			}
 		};
@@ -1147,7 +1159,7 @@ function postButtonListener(ev)
 				//submit the whole part
 				if (elementNum === 0)
 				{
-					postResponseDisplay("<p>Final post text upload beginning</p>");
+					postResponseDisplay("Final post text upload beginning");
 					return postEncryptAndSend(files[elementNum], function(h){return h;});
 				}
 				else
