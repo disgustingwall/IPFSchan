@@ -100,6 +100,9 @@ video, img, audio
 				<span id="treeViewHolder">
 					<input type="checkbox" id="treeView">Tree View
 				</span>
+				<span id="downloadLinkHolder">
+					<input type="checkbox" id="downloadLinks">Generate download links for files
+				</span>
 			</div>
 			<div id="newPostsHolder" style="position: fixed; bottom: 0; right: 0; display: none;">
 				<!-- span as button to load new mailbox -->
@@ -339,7 +342,10 @@ function renderFileCallback(responseText, extra)
 			displayContent = "<p class='unpadded'>File: " + filename + " (" + fileMatches[3] + ")</p>";
 			
 			//TODO: make this dependent on a checkbox, because it seems to cause immense lag
-			displayContent += "<p><a href='" + fileContent + "' download = '" + filename + "'>Download this file</a></p>";
+			if (document.getElementById("downloadLinks").checked)
+			{
+				displayContent += "<p><a href='" + fileContent + "' download='" + filename + "'>Download this file</a></p>";
+			}
 			
 			//video embed
 			if (fileMatches[4] === "video")
@@ -454,7 +460,7 @@ function appendPost(postContent, postHash, postReferenceHashes)
 	var margin;
 	
 	
-	if(document.getElementById("treeView").checked)
+	if (document.getElementById("treeView").checked)
 	{
 		if (postReferenceHashes)
 		{
