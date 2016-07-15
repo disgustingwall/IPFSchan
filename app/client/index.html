@@ -325,6 +325,9 @@ function renderFileCallback(responseText, extra)
 		{
 			displayContent = "<p>File: " + filename + " (" + fileMatches[3] + ")</p>";
 			
+			//TODO: make this dependent on a checkbox, because it seems to cause immense lag
+			displayContent += "<p><a href='" + fileContent + "' download = '" + filename + "'>Download this file</a></p>";
+			
 			//video embed
 			if (fileMatches[4] === "video")
 			{
