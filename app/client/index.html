@@ -115,6 +115,7 @@ var siteList = ["http://localhost:12462", "https://ipfschan.herokuapp.com"];
 var postText = {};
 
 
+var fileSizeCutOff = Math.pow(2, 18);
 var encryptedPosts = true;
 
 
@@ -530,7 +531,9 @@ function renderPost(responseText, extra)
 		return loadNext(true);
 	}
 	
-	if (postObject.hasOwnProperty("type") && postObject["type"] == "ipfschan.post")
+	var disableChannelCheck = true;
+	
+	if ((postObject.hasOwnProperty("type") && postObject["type"] == "ipfschan.post") && (disableChannelCheck || (postObject.hasOwnProperty("channel") && postObject["channel"] == document.getElementById("channel").value)))
 	{
 		if (postObject.hasOwnProperty("content"))
 		{
@@ -554,7 +557,7 @@ function renderPost(responseText, extra)
 			postReferencesMatches.forEach(function(element, index) {
 				postReferenceHashes.push(element.replace(/(&gt;&gt;(\w{46}))/g, "$2"));
 			});
-			
+				
 			postReferenceHashes.forEach(function(element, index) {
 				postList.push(element);
 				postList = postList.filter(function(element, position, array) {
@@ -562,6 +565,7 @@ function renderPost(responseText, extra)
 				});
 			});
 		}
+		
 		
 		//regexes are to process raw text
 		//make newlines into <br>s
@@ -603,7 +607,7 @@ function renderPost(responseText, extra)
 		{
 			var randomText = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 10);
 			var uniqueID = escapeHTML(postObject["files"][i]["title"] + "-" + randomText);
-			postContent = "<div id='" + uniqueID + "' onclick=\"renderFile('" + escapeHTML(JSON.stringify(postObject)) + "', " + i + ", \'" + uniqueID + "\')\" class='link'>" + escapeHTML(postObject["files"][i]["title"]) + "</div>" + postContent;
+			postContent = "<div id='" + uniqueID + "' onclick=\"renderFile('" + escapeHTML(JSON.stringify(postObject)) + "', " + i + ", \'" + uniqueID + "\')\" class='link'>" + escapeHTML(postObject["files"][i]["title"]) + " (Estimated size: " + escapeHTML(postObject["files"][i]["content"].length) * fileSizeCutOff / 1024 + " kilobytes)</div>" + postContent;
 		}
 		
 		//TODO: only append / scroll to if date is newer than variable setting or user has enabled historic posts
@@ -946,7 +950,6 @@ function postButtonListener(ev)
 	
 	
 	var files = [];
-	var cutOff = Math.pow(2, 18);
 	var firstFileRun = true;
 	
 	
@@ -967,10 +970,10 @@ function postButtonListener(ev)
 		
 		
 		//while final file size is above 262 KB and encryption is enabled
-		while(theFile.toString().length > cutOff)
+		while(theFile.toString().length > fileSizeCutOff)
 		{
-			fileParts.push(theFile.substr(0, cutOff));
-			theFile = theFile.substr(cutOff);
+			fileParts.push(theFile.substr(0, fileSizeCutOff));
+			theFile = theFile.substr(fileSizeCutOff);
 		}
 		
 		//add final part
@@ -984,7 +987,7 @@ function postButtonListener(ev)
 		var tooLarge = false;
 		for (var i = 1; i < files.length; i++)
 		{
-			if (files[i].toString().length > cutOff && encryptedPosts === true)
+			if (files[i].toString().length > fileSizeCutOff && encryptedPosts === true)
 			{
 				tooLarge = true;
 				files[i] = partition(files[i]);
@@ -1032,7 +1035,7 @@ function postButtonListener(ev)
 		}
 		files[0] = JSON.stringify(files[0]);
 		
-		if (files[0].toString().length > cutOff)
+		if (files[0].toString().length > fileSizeCutOff)
 		{
 			postResponseDisplay("Your post is too long; Compressing");
 			firstFileRun = false;
