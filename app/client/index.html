@@ -335,13 +335,12 @@ function renderFileCallback(responseText, extra)
 		}
 		
 		
-		var fileMatches = fileContent.toString().match(/(data:)?(((\w+)\/\w+)(;charset=.*)?)?(;base64)?,(.*)/);
+		var fileMatches = fileContent.toString().match(/(data:)?((([\w\-]+)\/[\w\-]+)(;charset=.*)?)?(;base64)?,(.*)/);
 		
-		if (fileMatches[1] === "data:" && (fileMatches[4] === "video" || fileMatches[4] === "image" || fileMatches[4] === "audio"))
+		if (fileMatches[1] === "data:" )
 		{
 			displayContent = "<p class='unpadded'>File: " + filename + " (" + fileMatches[3] + ")</p>";
 			
-			//TODO: make this dependent on a checkbox, because it seems to cause immense lag
 			if (document.getElementById("downloadLinks").checked)
 			{
 				displayContent += "<p><a href='" + fileContent + "' download='" + filename + "'>Download this file</a></p>";
@@ -364,6 +363,11 @@ function renderFileCallback(responseText, extra)
 			if (fileMatches[4] === "audio")
 			{
 				displayContent += "<audio controls><source src='" + fileContent + "' type='" + fileMatches[3] + "'></audio>";
+			}
+			//generic data
+			else
+			{
+				displayContent += "<p>" + escapeHTML(fileContent) + "</p>";
 			}
 		}
 		else
