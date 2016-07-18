@@ -361,7 +361,7 @@ function renderFileCallback(responseText, extra)
 		{
 			if (!(extra.hasOwnProperty("onlyDownloadLink") && extra["onlyDownloadLink"]))
 			{
-				displayContent = "<p class='unpadded'>File: " + filename + " (" + fileMatches[3] + ")</p>";
+				displayContent = "<p class='unpadded'>File: " + filename + " (" + fileMatches[3] + ", ~" + fileMatches[7].length / 1024 + " kilobytes)</p>";
 			}
 			
 			if (extra.hasOwnProperty("onlyDownloadLink") && extra["onlyDownloadLink"])
