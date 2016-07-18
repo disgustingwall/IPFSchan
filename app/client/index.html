@@ -100,9 +100,6 @@ video, img, audio
 				<span id="treeViewHolder">
 					<input type="checkbox" id="treeView">Tree View
 				</span>
-				<span id="downloadLinkHolder">
-					<input type="checkbox" id="downloadLinks">Generate download links for files
-				</span>
 			</div>
 			<div id="newPostsHolder" style="position: fixed; bottom: 0; right: 0; display: none;">
 				<!-- span as button to load new mailbox -->
@@ -147,6 +144,22 @@ function escapeHTML(text)
 	return String(text).replace(/[&<>"'\/]/g, function (s) {
 		return entityMap[s];
 	});
+}
+
+function generateRandomText()
+{
+	var randomText = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 10);
+	
+	if (randomText.length == 10)
+	{
+		return randomText;
+	}
+	//if the random text isn't long enough...
+	else
+	{
+		//generate more and return that
+		return generateRandomText();
+	}
 }
 
 function getProtocol()
@@ -303,15 +316,22 @@ function loadNextServer(parameterObject)
 
 function renderFileCallback(responseText, extra)
 {
-	if (responseText && extra.hasOwnProperty("nextPartHashIndex") && extra["nextPartHashIndex"] >= 0)
+	//if not all parts are saved
+	if (extra.hasOwnProperty("allPartsDownloaded") && extra["allPartsDownloaded"] == false)
 	{
-		//if everything is valid, not all file parts are downloaded
-		postText[extra["postJSON"]["files"][extra["fileIndex"]]["content"][extra["nextPartHashIndex"]]] = responseText;
-		return renderFile(JSON.stringify(extra["postJSON"]), extra["fileIndex"], extra["replaceID"]);
+		if (responseText)
+		{
+			//store the response text
+			postText[extra["postJSON"]["files"][extra["fileIndex"]]["content"][extra["nextPartHashIndex"]]] = responseText;
+		}
+		
+		//go back to renderFile so the cycle continues
+		return renderFile(JSON.stringify(extra["postJSON"]), extra["fileIndex"], extra["replaceID"], extra["onlyDownloadLink"]);
 	}
 	else
+	//if the passed object says we have all the parts...
+	if (extra.hasOwnProperty("allPartsDownloaded") && extra["allPartsDownloaded"] == true)
 	{
-		//if something is invalid, we probably have all the file parts
 		var fileContent = "";
 		var displayContent = ""
 		
@@ -339,35 +359,49 @@ function renderFileCallback(responseText, extra)
 		
 		if (fileMatches[1] === "data:" )
 		{
-			displayContent = "<p class='unpadded'>File: " + filename + " (" + fileMatches[3] + ")</p>";
+			if (!(extra.hasOwnProperty("onlyDownloadLink") && extra["onlyDownloadLink"]))
+			{
+				displayContent = "<p class='unpadded'>File: " + filename + " (" + fileMatches[3] + ")</p>";
+			}
 			
-			if (document.getElementById("downloadLinks").checked)
+			if (extra.hasOwnProperty("onlyDownloadLink") && extra["onlyDownloadLink"])
 			{
 				displayContent += "<p><a href='" + fileContent + "' download='" + filename + "'>Download this file</a></p>";
 			}
+			else
+			{
+				//create file download link that only generates the download link
+				var randomText = generateRandomText();
+				var uniqueID = escapeHTML(extra["postJSON"]["files"][extra["fileIndex"]]["title"] + "-" + randomText);
+				//this div has no padding class since it'll appear within a parent div with all the relevant classes set
+				displayContent += "<div id='" + uniqueID + "' onclick=\"renderFile('" + escapeHTML(JSON.stringify(extra["postJSON"])) + "', " + extra["fileIndex"] + ", \'" + uniqueID + "\', " + true + ")\" class='link'>Generate download link for this file</div>";
+			}
 			
-			//video embed
-			if (fileMatches[4] === "video")
+			if (!(extra.hasOwnProperty("onlyDownloadLink") && extra["onlyDownloadLink"]))
 			{
-				displayContent += '<video controls><source src="' + fileContent + '" type="' + fileMatches[3] + '"></video>';
-			}
-			else
-			//image embed
-			if (fileMatches[4] === "image")
-			{
-				//use title as alt
-				displayContent += "<img src='" + fileContent + "' style='max-width:90%;' alt='" + fileMatches[3] + "' />";
-			}
-			else
-			//audio embed
-			if (fileMatches[4] === "audio")
-			{
-				displayContent += "<audio controls><source src='" + fileContent + "' type='" + fileMatches[3] + "'></audio>";
-			}
-			//generic data
-			else
-			{
-				displayContent += "<p>" + escapeHTML(fileContent) + "</p>";
+				//video embed
+				if (fileMatches[4] === "video")
+				{
+					displayContent += '<video controls><source src="' + fileContent + '" type="' + fileMatches[3] + '"></video>';
+				}
+				else
+				//image embed
+				if (fileMatches[4] === "image")
+				{
+					//use title as alt
+					displayContent += "<img src='" + fileContent + "' style='max-width:90%;' alt='" + fileMatches[3] + "' />";
+				}
+				else
+				//audio embed
+				if (fileMatches[4] === "audio")
+				{
+					displayContent += "<audio controls><source src='" + fileContent + "' type='" + fileMatches[3] + "'></audio>";
+				}
+				//generic data
+				else
+				{
+					displayContent += "<p>" + escapeHTML(fileContent) + "</p>";
+				}
 			}
 		}
 		else
@@ -397,19 +431,35 @@ function renderFileCallback(responseText, extra)
 			newDiv.className = "padded";
 			newDiv.innerHTML = displayContent;
 			
+			var parentOfTarget;
+			parentOfTarget = document.getElementById(extra["replaceID"]).parentNode;
+			
+			var insertTarget;
+			
+			if (!(extra.hasOwnProperty("onlyDownloadLink") && extra["onlyDownloadLink"]))
+			{
+				insertTarget = newDiv;
+			}
+			else
+			{
+				insertTarget = newDiv.childNodes[0];
+			}
+			
 			//insert the final html
-			document.getElementById(extra["replaceID"]).parentNode.insertBefore(newDiv, document.getElementById(extra["replaceID"]));
+			parentOfTarget.insertBefore(insertTarget, document.getElementById(extra["replaceID"]));
+			
 			//remove the link so nobody loads an infinite number of files
 			document.getElementById(extra["replaceID"]).remove();
 		}
-		
+
 		return true;
 	}
 	
+	//at this point, the extra parameter object is probably invalid, so just return with error
 	return false;
 }
 
-function renderFile(postJSON, fileIndex, replaceID)
+function renderFile(postJSON, fileIndex, replaceID, onlyDownloadLink)
 {
 	try
 	{
@@ -440,11 +490,13 @@ function renderFile(postJSON, fileIndex, replaceID)
 	extra["postJSON"] = postJSON;
 	extra["fileIndex"] = fileIndex;
 	extra["replaceID"] = replaceID;
+	extra["onlyDownloadLink"] = onlyDownloadLink;
 	extra["nextPartHashIndex"] = nextPartHashIndex;
+	extra["allPartsDownloaded"] = allPartsDownloaded;
 	
 	if (allPartsDownloaded)
 	{
-		return renderFileCallback("", extra);
+		return renderFileCallback(false, extra);
 	}
 	else
 	{
@@ -623,12 +675,11 @@ function renderPost(responseText, extra)
 		postContent = "<p class='padded'>" + postContent + "</p>";
 		
 		//add file objects
-		//TODO: replicate this in renderFile so that doubly compressed posts load properly
 		for (var i = 0; i < postObject["files"].length; i++)
 		{
-			var randomText = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 10);
+			var randomText = generateRandomText();
 			var uniqueID = escapeHTML(postObject["files"][i]["title"] + "-" + randomText);
-			postContent = "<div id='" + uniqueID + "' onclick=\"renderFile('" + escapeHTML(JSON.stringify(postObject)) + "', " + i + ", \'" + uniqueID + "\')\" class='link padded'>" + escapeHTML(postObject["files"][i]["title"]) + " (Estimated size: " + escapeHTML(postObject["files"][i]["content"].length) * fileSizeCutOff / 1024 + " kilobytes)</div>" + postContent;
+			postContent = "<div id='" + uniqueID + "' onclick=\"renderFile('" + escapeHTML(JSON.stringify(postObject)) + "', " + i + ", \'" + uniqueID + "\', " + false + ")\" class='link padded'>" + escapeHTML(postObject["files"][i]["title"]) + " (Estimated size: " + escapeHTML(postObject["files"][i]["content"].length) * fileSizeCutOff / 1024 + " kilobytes)</div>" + postContent;
 		}
 		
 		//TODO: only append / scroll to if date is newer than variable setting or user has enabled historic posts
