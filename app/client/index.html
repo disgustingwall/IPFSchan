@@ -456,11 +456,13 @@ function renderFileCallback(responseText, extra)
 	}
 	
 	//at this point, the extra parameter object is probably invalid, so just return with error
+	//TODO: just pass back what we have and handle problems in renderFile
 	return false;
 }
 
 function renderFile(postJSON, fileIndex, replaceID, onlyDownloadLink)
 {
+	//TODO: handle invalid parameters
 	try
 	{
 		postJSON = JSON.parse(postJSON.replace("\n", "\\n"));
