@@ -127,8 +127,11 @@ var siteList = ["http://localhost:12462", "https://ipfschan.herokuapp.com"];
 var postText = {};
 
 
-var fileSizeCutOff = Math.pow(2, 18);
-var encryptedPosts = true;
+var encryptionFileSizeCutOff = Math.pow(2, 18);
+//TODO: set this based on what the site reports
+var siteFileSizeCutOff = Math.pow(10, 6);
+var submitEncryptedPosts = true;
+var showUnencryptedPosts = true;
 
 
 function escapeHTML(text)
@@ -581,7 +584,7 @@ function decryptToChannel(message)
 		console.log(e);
 	}
 	
-	if (returnValue === "" && encryptedPosts === false)
+	if (returnValue === "" && (submitEncryptedPosts === false || showUnencryptedPosts === true))
 	{
 		returnValue = message;
 	}
@@ -681,7 +684,7 @@ function renderPost(responseText, extra)
 		{
 			var randomText = generateRandomText();
 			var uniqueID = escapeHTML(postObject["files"][i]["title"] + "-" + randomText);
-			postContent = "<div id='" + uniqueID + "' onclick=\"renderFile('" + escapeHTML(JSON.stringify(postObject)) + "', " + i + ", \'" + uniqueID + "\', " + false + ")\" class='link padded'>" + escapeHTML(postObject["files"][i]["title"]) + " (Estimated size: " + escapeHTML(postObject["files"][i]["content"].length) * fileSizeCutOff / 1024 + " kilobytes)</div>" + postContent;
+			postContent = "<div id='" + uniqueID + "' onclick=\"renderFile('" + escapeHTML(JSON.stringify(postObject)) + "', " + i + ", \'" + uniqueID + "\', " + false + ")\" class='link padded'>" + escapeHTML(postObject["files"][i]["title"]) + " (Estimated size: " + escapeHTML(postObject["files"][i]["content"].length) * encryptionFileSizeCutOff / 1024 + " kilobytes)</div>" + postContent;
 		}
 		
 		//TODO: only append / scroll to if date is newer than variable setting or user has enabled historic posts
@@ -1025,6 +1028,20 @@ function postButtonListener(ev)
 	var files = [];
 	var firstFileRun = true;
 	
+	//variables that may need to be modified based on user input
+	var internalFileSizeCutOff;
+	
+	//set internal size cutoff based on whether the message will be encrypted
+	if (submitEncryptedPosts === true && channelPassword.length > 0)
+	{
+		internalFileSizeCutOff = encryptionFileSizeCutOff;
+	}
+	else
+	{
+		//the floor of parseFloat is so that if the site has no file restrictions the global Infinity can be used
+		internalFileSizeCutOff = Math.floor(parseFloat(siteFileSizeCutOff));
+	}
+	
 	
 	//functions
 	var partition;
@@ -1042,11 +1059,11 @@ function postButtonListener(ev)
 		var fileParts = [];
 		
 		
-		//while final file size is above 262 KB and encryption is enabled
-		while(theFile.toString().length > fileSizeCutOff)
+		//while final file size is above the allowed limit
+		while(theFile.toString().length > internalFileSizeCutOff)
 		{
-			fileParts.push(theFile.substr(0, fileSizeCutOff));
-			theFile = theFile.substr(fileSizeCutOff);
+			fileParts.push(theFile.substr(0, internalFileSizeCutOff));
+			theFile = theFile.substr(internalFileSizeCutOff);
 		}
 		
 		//add final part
@@ -1060,7 +1077,7 @@ function postButtonListener(ev)
 		var tooLarge = false;
 		for (var i = 1; i < files.length; i++)
 		{
-			if (files[i].toString().length > fileSizeCutOff && encryptedPosts === true)
+			if (files[i].toString().length > internalFileSizeCutOff)
 			{
 				tooLarge = true;
 				files[i] = partition(files[i]);
@@ -1109,7 +1126,7 @@ function postButtonListener(ev)
 		}
 		files[0] = JSON.stringify(files[0]);
 		
-		if (files[0].toString().length > fileSizeCutOff)
+		if (files[0].toString().length > internalFileSizeCutOff)
 		{
 			postResponseDisplay("Your post is too long; Compressing");
 			firstFileRun = false;
@@ -1132,7 +1149,7 @@ function postButtonListener(ev)
 		
 		var encrypted = postText.toString();
 		
-		if (encryptedPosts === true)
+		if (submitEncryptedPosts === true && channelPassword.length > 0)
 		{
 			encrypted = CryptoJS.AES.encrypt(encrypted.toString(), channelPassword.toString() + channel.toString());
 		}
