@@ -225,7 +225,7 @@ function shouldItBeHTTPS(protocol)
 	if (protocol === "" || protocol.replace(/\w(:\/\/).*/, "$1") !== "://")
 	{
 		//if blank or not a protocol, return at least http://
-		//TODO: should this be https
+		//TODO: should this be https or http?
 		return "https://";
 	}
 	else
@@ -597,6 +597,9 @@ function renderPost(responseText, extra)
 	var postReferenceHashes;
 	var responseContent = responseText;
 	var postContent = "";
+	var wasEncrypted = false;
+	
+	//TODO: test if post is encrypted and set wasEncrypted accordingly
 	
 	responseContent = decryptToChannel(responseContent);
 	
@@ -607,7 +610,6 @@ function renderPost(responseText, extra)
 	}
 	catch (e)
 	{
-		//TODO: render unencrypted files/folders posted through ipfs add?
 		return loadNext(true);
 	}
 	
@@ -682,9 +684,20 @@ function renderPost(responseText, extra)
 		//add file objects
 		for (var i = 0; i < postObject["files"].length; i++)
 		{
+			var estimatedSize = escapeHTML(postObject["files"][i]["content"].length);
+			
+			if (wasEncrypted)
+			{
+				estimatedSize *= encryptionFileSizeCutOff / 1024;
+			}
+			else
+			{
+				estimatedSize *= siteFileSizeCutOff / 1024;
+			}
+			
 			var randomText = generateRandomText();
 			var uniqueID = escapeHTML(postObject["files"][i]["title"] + "-" + randomText);
-			postContent = "<div id='" + uniqueID + "' onclick=\"renderFile('" + escapeHTML(JSON.stringify(postObject)) + "', " + i + ", \'" + uniqueID + "\', " + false + ")\" class='link padded'>" + escapeHTML(postObject["files"][i]["title"]) + " (Estimated size: " + escapeHTML(postObject["files"][i]["content"].length) * encryptionFileSizeCutOff / 1024 + " kilobytes)</div>" + postContent;
+			postContent = "<div id='" + uniqueID + "' onclick=\"renderFile('" + escapeHTML(JSON.stringify(postObject)) + "', " + i + ", \'" + uniqueID + "\', " + false + ")\" class='link padded'>" + escapeHTML(postObject["files"][i]["title"]) + " (Estimated size: " + estimatedSize + " kilobytes)</div>" + postContent;
 		}
 		
 		//TODO: only append / scroll to if date is newer than variable setting or user has enabled historic posts
