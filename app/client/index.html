@@ -599,10 +599,13 @@ function renderPost(responseText, extra)
 	var postContent = "";
 	var wasEncrypted = false;
 	
-	//TODO: test if post is encrypted and set wasEncrypted accordingly
-	
 	responseContent = decryptToChannel(responseContent);
 	
+	//TODO: test if post is encrypted and set wasEncrypted accordingly
+	if (responseContent !== responseText)
+	{
+		wasEncrypted = true;
+	}
 	
 	try
 	{
