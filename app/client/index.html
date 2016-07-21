@@ -87,18 +87,21 @@ video, img, audio
 			</div>
 			<div id="updateControlsHolder">
 				<span id="autoUpdateHolder">
-					<input type="checkbox" id="autoUpdate" onclick="refreshNewestMailbox()" checked>Automatically query for new posts
+					<input type="checkbox" id="autoUpdate" onclick="refreshNewestMailbox()" checked><label for="autoUpdate">Automatically query for new posts</label>
 				</span>
 				<span id="autoLoadPostsHolder">
-					<input type="checkbox" id="autoLoadPosts" checked>Automatically queue new posts
+					<input type="checkbox" id="autoLoadPosts" checked><label for="autoLoadPosts">Automatically queue new posts</label>
 				</span>
 				<span id="refreshNewestHolder">
 					<span id="refreshNewest" onclick="refreshNewestMailbox()" class="link">Refresh</span>
 				</span>
 			</div>
 			<div id="viewControlsHolder">
+				<span id="scrollToNewPostsHolder">
+					<input type="checkbox" id="scrollToNewPosts" checked><label for="scrollToNewPosts">Scroll to new posts</label>
+				</span>
 				<span id="treeViewHolder">
-					<input type="checkbox" id="treeView">Tree View
+					<input type="checkbox" id="treeView"><label for="treeView">Tree View</label>
 				</span>
 			</div>
 			<div id="newPostsHolder" style="position: fixed; bottom: 0; right: 0; display: none;">
@@ -563,8 +566,11 @@ function appendPost(postContent, postHash, postReferenceHashes)
 		showLoadNextButton();
 	}
 	
-	//TODO: toggle based on global variable/cookie/checkbox
-	return document.getElementById(postHash).scrollIntoView();
+	//toggle scrolling based on checkbox
+	if (document.getElementById("scrollToNewPosts").checked)
+	{
+		return document.getElementById(postHash).scrollIntoView();
+	}
 }
 
 function decryptToChannel(message)
