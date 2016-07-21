@@ -167,7 +167,7 @@ function generateRandomText()
 
 function getProtocol()
 {
-	return window.location.protocol + "//";
+	return window.location.protocol;
 }
 
 function getDomain()
@@ -182,7 +182,7 @@ function getPort()
 
 function getProtocolAndDomain()
 {
-	var returnString = getProtocol() + getDomain();
+	var returnString = getProtocol() + "//" + getDomain();
 	var port = getPort();
 	
 	if (port)
@@ -212,21 +212,21 @@ function shouldItBeHTTPS(protocol)
 {
 	pageProtocol = getProtocol();
 	
-	if (pageProtocol === "https://")
+	if (pageProtocol === "https:")
 	{
-		return "https://";
+		return "https:";
 	}
 	else
-	if (pageProtocol === "http://")
+	if (pageProtocol === "http:")
 	{
-		return "http://";
+		return "http:";
 	}
 	else
-	if (protocol === "" || protocol.replace(/\w(:\/\/).*/, "$1") !== "://")
+	if (protocol === "" || protocol.replace(/\w(:).*/, "$1") !== ":")
 	{
-		//if blank or not a protocol, return at least http://
+		//if blank or not a protocol, return at least https:
 		//TODO: should this be https or http?
-		return "https://";
+		return "https:";
 	}
 	else
 	{
@@ -243,8 +243,8 @@ function webRequest(url, func, extra, error)
 		error = function () {};
 	}
 	
-	//make sure http(s)? matches current page
-	realURL = shouldItBeHTTPS(url.replace(/(.*:\/\/)?(.+(\.|:).+)/, "$1")) + url.replace(/(.*:\/\/)?(.+(\.|:).+)/, "$2");
+	//TODO: make sure http(s)? matches current page
+	realURL = shouldItBeHTTPS(url.replace(/(.*:)?(\/\/.+(\.|:).+)/, "$1")) + url.replace(/(.*:)?(\/\/.+(\.|:).+)/, "$2");
 	
 	//console.log(url);
 	//console.log(realURL);
