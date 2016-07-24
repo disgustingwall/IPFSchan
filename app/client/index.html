@@ -49,9 +49,9 @@ video, img, audio
 		<div id="content" style="margin:8;">
 			<div id="welcome"><p>Welcome to IPFSchan. For instructions and information, go to <a href="#instructions">the bottom of this page</a></p></div>
 			<br />
-			<div id="mailboxInfoHolder">
+			<div id="blockInfoHolder">
 				<p>When this page finds that a new block has been posted on a server, it will place the ID of that hash below as a link. Click it to store that ID in the URL so that you can automatically load it later. If you're running your own IPFS node, that means you can have access to posts even if the server goes down. </p>
-				<p><span id="currentMailboxHolder"></span></p>
+				<p><span id="currentBlockHolder"></span></p>
 			</div>
 			<div id="postForm">
 				<p>
@@ -87,13 +87,13 @@ video, img, audio
 			</div>
 			<div id="updateControlsHolder">
 				<span id="autoUpdateHolder">
-					<input type="checkbox" id="autoUpdate" onclick="refreshNewestMailbox()" checked><label for="autoUpdate">Automatically query for new posts</label>
+					<input type="checkbox" id="autoUpdate" onclick="refreshNewestBlock()" checked><label for="autoUpdate">Automatically query for new posts</label>
 				</span>
 				<span id="autoLoadPostsHolder">
 					<input type="checkbox" id="autoLoadPosts" checked><label for="autoLoadPosts">Automatically queue new posts</label>
 				</span>
 				<span id="refreshNewestHolder">
-					<span id="refreshNewest" onclick="refreshNewestMailbox()" class="link">Refresh</span>
+					<span id="refreshNewest" onclick="refreshNewestBlock()" class="link">Refresh</span>
 				</span>
 			</div>
 			<div id="viewControlsHolder">
@@ -105,8 +105,8 @@ video, img, audio
 				</span>
 			</div>
 			<div id="newPostsHolder" style="position: fixed; bottom: 0; right: 0; display: none;">
-				<!-- span as button to load new mailbox -->
-				<span onclick='queueNewMailbox();' id="newPosts" class="link">New posts available; Click here to queue them</span>
+				<!-- span as button to load new block -->
+				<span onclick='queueNewBlock();' id="newPosts" class="link">New posts available; Click here to queue them</span>
 			</div>
 			<div id="instructions"><p id="howtopost">Post by entering some text into the textarea or selecting a file in the "Files" section, then press the "Submit" button. Or just submit a blank post; I'm sure the server can handle it =)</p><p id="purpose">IPFSchan is designed to allow others to quickly and automatically back up your post. All content is delivered through IPFS, a network designed to deliver content peer-to-peer so that hardware failures don't restrict access. This means that anything you post here could be backed up on hundereds of computers just from other people looking at it, as their computers download the content, save it, and serve it to their users.</p><p id="encryption">The "Channel" and "Channel password" inputs are there so you can encrypt your messages or decrypt other people's messages as you load them. Channels and passwords will be gathered from the inputs the instant you submit the post, so fill out the values you want before submitting. If you post an encrypted message, only people with the same channel and password will be able to read it. This requires you to share the channel and password through other channels or encrypt your own messages (EG by using PGP). If you load an encrypted post when the channel and password aren't filled out correctly, it will be skipped without notifying you. I can make no promises about security, and this site will likely be in beta for a long time, but I can say that I'm passionate about user security and I promise that, as far as I can tell or control, all content sent over the internet is encrypted before it leaves your computer.</p><p id="learnmore">To learn more, visit <a href="https://ipfs.io" target="_blank">ipfs.io</a> or <a href="https://github.com/disgustingwall/IPFSchan" target="_blank">the github for this project</a></p></div>
 			<div id="bottom"><p>Have a nice day</p></div>
@@ -119,11 +119,11 @@ var foundSite = false;
 
 var lastLoadedPost = 0;
 
-var newestMailbox = "";
+var newestBlock = "";
 var currentSite = undefined;
 
 var postList = [];
-var globalMailboxes = [];
+var globalBlocks = [];
 //TODO: add to list from IPNS, current domain, or these hosts?
 var siteList = ["http://localhost:12462", "https://ipfschan.herokuapp.com"];
 
@@ -304,7 +304,7 @@ function loadNextServer(parameterObject)
 		var currentSiteLocation = siteList.indexOf(getProtocolAndDomain());
 	}
 	
-	//if list of sites contains current site
+	//if list of sites has a next entry
 	if (currentSiteLocation >= 0 && currentSiteLocation + 1 < siteList.length)
 	{
 		//test next site
@@ -557,7 +557,7 @@ function appendPost(postContent, postHash, postReferenceHashes)
 	document.getElementById("posts").insertBefore(newDiv, insertBeforeElement);
 	
 	
-	if (globalMailboxes.length <= 0 && postList.length <= lastLoadedPost)
+	if (globalBlocks.length <= 0 && postList.length <= lastLoadedPost)
 	{
 		hideLoadNextButton();
 	}
@@ -758,7 +758,7 @@ function cleanIPFSHashArray(hashArray)
 	return hashArray;
 }
 
-function renderMailbox(responseText, parameterObject)
+function renderBlock(responseText, parameterObject)
 {
 	var continueUntilPost = parameterObject["continueUntilPost"];
 	var continueForever = parameterObject["continueForever"];
@@ -776,17 +776,17 @@ function renderMailbox(responseText, parameterObject)
 	
 	var originalPostListLength = postList.length;
 	var responseObject = JSON.parse(responseText.replace("\n", "\\n"));
-	var mailboxes = parameterObject["mailboxes"];
+	var blocks = parameterObject["blocks"];
 	
 	
 	if (responseObject.hasOwnProperty("o"))
 	{
 		for(var i = 0; i < responseObject["o"].length; i++)
 		{
-			mailboxes.push(responseObject["o"][i]);
+			blocks.push(responseObject["o"][i]);
 		}
 		
-		mailboxes = cleanIPFSHashArray(mailboxes);
+		blocks = cleanIPFSHashArray(blocks);
 	}
 	
 	if (responseObject.hasOwnProperty("n"))
@@ -805,26 +805,26 @@ function renderMailbox(responseText, parameterObject)
 	{
 		for(var i = 0; i < responseObject["u"].length; i++)
 		{
-			mailboxes.push(responseObject["u"][i]);
+			blocks.push(responseObject["u"][i]);
 			postList.push(responseObject["n"][i]);
 		}
 		
-		mailboxes = cleanIPFSHashArray(mailboxes);
+		blocks = cleanIPFSHashArray(blocks);
 		postList = cleanIPFSHashArray(postList);
 	}
 	/**/
 	
 	
-	globalMailboxes = mailboxes;
+	globalBlocks = blocks;
 	
 	
 	//finally,
-	//if the content received was only a mailbox,
+	//if the content received was only a block,
 	//or if we are continuing a loadNext streak
 	//or if user wants to load all possible posts
 	if (postList.length <= originalPostListLength || continueUntilPost || continueForever)
 	{
-		//load next mailbox
+		//load next block
 		return loadNext(continueUntilPost, continueForever);
 	}
 	else
@@ -833,7 +833,7 @@ function renderMailbox(responseText, parameterObject)
 	}
 }
 
-function getMailbox(mailboxes, continueUntilPost, continueForever)
+function getBlock(blocks, continueUntilPost, continueForever)
 {
 	if (continueUntilPost !== true)
 	{
@@ -846,15 +846,15 @@ function getMailbox(mailboxes, continueUntilPost, continueForever)
 	}
 	
 	
-	//save newest entry in newMailbox and remove it from array
-	var newMailbox = mailboxes.shift();
+	//save newest entry in newBlock and remove it from array
+	var newBlock = blocks.shift();
 	var parameterObject = {};
 	
-	parameterObject["mailboxes"] = mailboxes;
+	parameterObject["blocks"] = blocks;
 	parameterObject["continueUntilPost"] = continueUntilPost;
 	parameterObject["continueForever"] = continueForever;
 	
-	return webRequest(getProtocolAndDomain() + "/ipfs/" + newMailbox, renderMailbox, parameterObject);
+	return webRequest(getProtocolAndDomain() + "/ipfs/" + newBlock, renderBlock, parameterObject);
 }
 
 function loadNext(continueUntilPost, continueForever, loadAll)
@@ -894,11 +894,11 @@ function loadNext(continueUntilPost, continueForever, loadAll)
 		
 		return renderPosts(lastLoadedPost, end);
 	}
-	//only load mailboxes if there are no new posts left
+	//only load blocks if there are no new posts left
 	else
-	if (globalMailboxes.length > 0)
+	if (globalBlocks.length > 0)
 	{
-		return getMailbox(globalMailboxes, continueUntilPost);
+		return getBlock(globalBlocks, continueUntilPost);
 	}
 	//if there's nothing to load, hide the button
 	else
@@ -907,18 +907,18 @@ function loadNext(continueUntilPost, continueForever, loadAll)
 	}
 }
 
-function queueNewMailbox()
+function queueNewBlock()
 {
-	//TODO: change fragment automatically if it isn't 46 characters long or it's set to the current mailbox or is blank?
-	document.getElementById("currentMailboxHolder").innerHTML = "<a href='#" + newestMailbox + "'>" + newestMailbox + "</a>";
+	//TODO: change fragment automatically if it isn't 46 characters long or it's set to the current block or is blank?
+	document.getElementById("currentBlockHolder").innerHTML = "<a href='#" + newestBlock + "'>" + newestBlock + "</a>";
 
 	var parameterObject = {};
 	parameterObject["delay"] = 5 * 1000;
 
 	//add newest to front
-	globalMailboxes.unshift(newestMailbox);
+	globalBlocks.unshift(newestBlock);
 
-	setTimeout(refreshNewestMailbox, parameterObject["delay"], {"delay": Math.ceil(parameterObject["delay"] * 2 + Math.random()*10)});
+	setTimeout(refreshNewestBlock, parameterObject["delay"], {"delay": Math.ceil(parameterObject["delay"] * 2 + Math.random()*10)});
 
 	showLoadNextButton();
 	document.getElementById("loadNextSpan").style["border-style"] = "solid";
@@ -926,7 +926,7 @@ function queueNewMailbox()
 	document.getElementById("newPostsHolder").style.display = "none";
 }
 
-function storeNewestMailbox(hash, parameterObject)
+function storeNewestBlock(hash, parameterObject)
 {
 	if (!parameterObject)
 	{
@@ -938,14 +938,14 @@ function storeNewestMailbox(hash, parameterObject)
 		parameterObject["delay"] = 5 * 1000;
 	}
 
-	var oldMailbox = newestMailbox;
-	newestMailbox = hash;
+	var oldBlock = newestBlock;
+	newestBlock = hash;
 
-	if (newestMailbox != oldMailbox)
+	if (newestBlock != oldBlock)
 	{
 		if (document.getElementById("autoLoadPosts").checked)
 		{
-			queueNewMailbox();
+			queueNewBlock();
 		}
 		else
 		{
@@ -956,12 +956,12 @@ function storeNewestMailbox(hash, parameterObject)
 	{
 		if (document.getElementById("autoUpdate").checked)
 		{
-			setTimeout(refreshNewestMailbox, parameterObject["delay"], {"delay": Math.floor(parameterObject["delay"] * 1.5)});
+			setTimeout(refreshNewestBlock, parameterObject["delay"], {"delay": Math.floor(parameterObject["delay"] * 1.5)});
 		}
 	}
 }
 
-function refreshNewestMailbox(parameterObject)
+function refreshNewestBlock(parameterObject)
 {
 	var siteToLoadFrom = currentSite;
 
@@ -970,10 +970,10 @@ function refreshNewestMailbox(parameterObject)
 		siteToLoadFrom = getProtocolAndDomain();
 	}
 	
-	webRequest(siteToLoadFrom + "/newest", storeNewestMailbox, parameterObject);
+	webRequest(siteToLoadFrom + "/newest", storeNewestBlock, parameterObject);
 }
 
-function getNewestMailbox(responseText, parameterObject)
+function getNewestBlock(responseText, parameterObject)
 {
 	if (responseText.length === 46)
 	{
@@ -986,8 +986,8 @@ function getNewestMailbox(responseText, parameterObject)
 		
 		//if we're here, it means we're done loading sites
 		foundSite = true;
-		storeNewestMailbox(responseText, parameterObject);
-		return getMailbox([responseText]);
+		storeNewestBlock(responseText, parameterObject);
+		return getBlock([responseText]);
 	}
 	else
 	{
@@ -997,7 +997,7 @@ function getNewestMailbox(responseText, parameterObject)
 
 function loadSite(site)
 {
-	webRequest(site + "/newest", getNewestMailbox, {"currentSiteLocation": siteList.indexOf(site)}, loadNextServer);
+	webRequest(site + "/newest", getNewestBlock, {"currentSiteLocation": siteList.indexOf(site)}, loadNextServer);
 }
 
 function postResponseClear(id)
@@ -1007,7 +1007,7 @@ function postResponseClear(id)
 	
 	if (document.getElementById("autoUpdate").checked)
 	{
-		setTimeout(refreshNewestMailbox, 1000);
+		setTimeout(refreshNewestBlock, 1000);
 	}
 }
 
@@ -1369,7 +1369,7 @@ function main()
 {
 	currentSite = getProtocolAndDomain();
 	
-	//add fragment to postList and mailbox list
+	//add fragment to postList and block list
 	var currentFragment = location.hash.replace(/#(.*)/, "$1");
 	
 	if (currentFragment.length === 46)
@@ -1378,13 +1378,13 @@ function main()
 		postList = postList.filter(function(element, position, array) {
 			return array.indexOf(element) === position;
 		});
-		globalMailboxes.unshift(currentFragment);
+		globalBlocks.unshift(currentFragment);
 		//ensure load next button is available
 		showLoadNextButton()
 	}
 	
 	setup(true);
-	loadSite(getProtocolAndDomain());
+	loadSite(currentSite);
 }
 
 
