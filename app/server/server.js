@@ -13,7 +13,7 @@ var app;
 var ipfs;
 
 
-//control to fill mailboxCreationTimes up with dummy values at startup to increase refresh rate or not
+//control to fill blockCreationTimes up with dummy values at startup to increase refresh rate or not
 var startQuick = true;
 //control what the minimum and maximum block creation time is, in miliseconds
 var minimumBlockTime = 10 * 1000; //ten seconds
@@ -22,17 +22,17 @@ var maximumBlockTime = 60 * 60 * 1000; //one hour
 var targetBlocksPerHour = 6;
 
 //track when emergency refreshes are allowed to prevent minting in /uploaded from triggering multiple times
-var lastMailboxRefresh = 0;
+var lastBlockRefresh = 0;
 
-var newestMailbox = "";
+var newestBlock = "";
 
 //list of peer sites
 var postsToMerge = [];
-var mailboxesToMerge = [];
-var mailboxes = [];
-var foreignMailboxes = [];
+var blocksToMerge = [];
+var blocks = [];
+var foreignBlocks = [];
 var userSubmittedHashes = [];
-var mailboxCreationTimes = [];
+var blockCreationTimes = [];
 //blank entries are to give the site respite if it has itself in its array
 var peerSitesList = ["https://ipfschan.herokuapp.com"];
 
@@ -96,7 +96,7 @@ function writeIfNotExist(file, content, callback, callbackParmeterObject)
 	});
 }
 
-function cleanMailboxCreationTimes(callback)
+function cleanBlockCreationTimes(callback)
 {
 	if (!callback)
 	{
@@ -106,15 +106,15 @@ function cleanMailboxCreationTimes(callback)
 	var currentTime = Date.now();
 	
 	//remove all dates older than one hour
-	while(mailboxCreationTimes[0] < currentTime - (60 * 60 * 1000))
+	while(blockCreationTimes[0] < currentTime - (60 * 60 * 1000))
 	{
-		mailboxCreationTimes.splice(0, 1);
+		blockCreationTimes.splice(0, 1);
 	}
 	
 	return callback();
 }
 
-function refreshMailboxResponse (response)
+function refreshBlockResponse (response)
 {
 	var str = '';
 	
@@ -132,10 +132,10 @@ function refreshMailboxResponse (response)
 		if (str.length === 46)
 		{
 			//only process if foreign newest is actually new (foreign site is active)
-			if (foreignMailboxes.indexOf(str) === -1)
+			if (foreignBlocks.indexOf(str) === -1)
 			{
-				foreignMailboxes.push(str);
-				mailboxesToMerge.push(str);
+				foreignBlocks.push(str);
+				blocksToMerge.push(str);
 			}
 		}
 		else
@@ -147,7 +147,7 @@ function refreshMailboxResponse (response)
 	});
 }
 
-function refreshMailbox(site)
+function refreshBlock(site)
 {
 	var protocol = http;
 	
@@ -175,7 +175,7 @@ function refreshMailbox(site)
 		
 		try
 		{
-			var req = protocol.request(site + "/newest", refreshMailboxResponse);
+			var req = protocol.request(site + "/newest", refreshBlockResponse);
 			req.on('error', function(err) {
 				console.log(err);
 			});
@@ -199,7 +199,7 @@ function refreshPeerSite(currentPeerSite)
 		currentPeerSite = 0;
 	}
 	
-	cleanMailboxCreationTimes(function(){
+	cleanBlockCreationTimes(function(){
 		if (currentPeerSite >= peerSitesList.length || currentPeerSite < 0)
 		{
 			currentPeerSite = 0;
@@ -208,121 +208,121 @@ function refreshPeerSite(currentPeerSite)
 		
 		if (peerSitesList.length > 0)
 		{
-			refreshMailbox(peerSitesList[currentPeerSite]);
+			refreshBlock(peerSitesList[currentPeerSite]);
 		}
 		
 		//delay devided by 2 to be twice as fast
-		var delay = Math.ceil((Math.min(maximumBlockTime, Math.ceil(((60 * 60 * 1000 / targetBlocksPerHour) - minimumBlockTime) * ((mailboxCreationTimes.length) / targetBlocksPerHour) + minimumBlockTime)) + 1) / 2);
+		var delay = Math.ceil((Math.min(maximumBlockTime, Math.ceil(((60 * 60 * 1000 / targetBlocksPerHour) - minimumBlockTime) * ((blockCreationTimes.length) / targetBlocksPerHour) + minimumBlockTime)) + 1) / 2);
 		
 		return setTimeout(refreshPeerSite, delay, currentPeerSite + 1);
 	});
 }
 
-function createMailboxCallback()
+function createBlockCallback()
 {
-	//clean mailboxesToMerge of mailboxes created by this server
-	//this will prevent mailboxes downloaded from yourself from being re-added
-	for (var i = 0; i < mailboxesToMerge.length; i++)
+	//clean blocksToMerge of blocks created by this server
+	//this will prevent blocks downloaded from yourself from being re-added
+	for (var i = 0; i < blocksToMerge.length; i++)
 	{
-		if (mailboxes.indexOf(mailboxesToMerge[i]) !== -1)
+		if (blocks.indexOf(blocksToMerge[i]) !== -1)
 		{
-			mailboxesToMerge.splice(i, 1);
+			blocksToMerge.splice(i, 1);
 		}
 	}
 	
 	//only run if there is something to commit
-	if (mailboxesToMerge.length > 0 || postsToMerge.length > 0 || userSubmittedHashes.length > 0)
+	if (blocksToMerge.length > 0 || postsToMerge.length > 0 || userSubmittedHashes.length > 0)
 	{
-		var newMailboxJSON = {};
-		var oldMailbox = newestMailbox.toString();
+		var newBlockJSON = {};
+		var oldBlock = newestBlock.toString();
 		
 		
-		//if there are no new mailboxes, don't include an ["o"] entry (this is mostly for startup when there is no newest mailbox)
-		//TODO: check if this mailbox chain gets to new posts before getting back to all previously included mailboxes
-		if (mailboxesToMerge.length > 0 || oldMailbox)
+		//if there are no new blocks, don't include an ["o"] entry (this is mostly for startup when there is no newest block)
+		//TODO: check if this block chain gets to new posts before getting back to all previously included blocks
+		if (blocksToMerge.length > 0 || oldBlock)
 		{
-			//save 128 or less mailboxes staged to be merged in the newMailboxJSON object
-			newMailboxJSON["o"] = mailboxesToMerge.splice(0, 128);
+			//save 128 or less blocks staged to be merged in the newBlockJSON object
+			newBlockJSON["o"] = blocksToMerge.splice(0, 128);
 			
-			if (oldMailbox)
+			if (oldBlock)
 			{
-				newMailboxJSON["o"].push(oldMailbox);
+				newBlockJSON["o"].push(oldBlock);
 			}
 			
 			//remove duplicates
-			newMailboxJSON["o"] = newMailboxJSON["o"].filter(function(element, position, array) {
+			newBlockJSON["o"] = newBlockJSON["o"].filter(function(element, position, array) {
 				return array.indexOf(element) === position;
 			});
 			
-			if (newMailboxJSON["o"].length <= 0)
+			if (newBlockJSON["o"].length <= 0)
 			{
-				delete newMailboxJSON["o"];
+				delete newBlockJSON["o"];
 			}
 		}
 		
 		if (postsToMerge.length > 0)
 		{
-			//save 128 or less mailboxes staged to be merged in the newMailboxJSON object
-			newMailboxJSON["n"] = postsToMerge.splice(0, 128);
+			//save 128 or less blocks staged to be merged in the newBlockJSON object
+			newBlockJSON["n"] = postsToMerge.splice(0, 128);
 			
 			//remove duplicates
-			newMailboxJSON["n"] = newMailboxJSON["n"].filter(function(element, position, array) {
+			newBlockJSON["n"] = newBlockJSON["n"].filter(function(element, position, array) {
 				return array.indexOf(element) === position;
 			});
 			
-			if (newMailboxJSON["n"].length <= 0)
+			if (newBlockJSON["n"].length <= 0)
 			{
-				delete newMailboxJSON["n"];
+				delete newBlockJSON["n"];
 			}
 		}
 		
 		if (userSubmittedHashes.length > 0)
 		{
-			newMailboxJSON["u"] = userSubmittedHashes;
+			newBlockJSON["u"] = userSubmittedHashes;
 			
 			userSubmittedHashes = [];
 			
 			//remove duplicates
-			newMailboxJSON["u"] = newMailboxJSON["u"].filter(function(element, position, array) {
+			newBlockJSON["u"] = newBlockJSON["u"].filter(function(element, position, array) {
 				return array.indexOf(element) === position;
 			});
 			
-			if (newMailboxJSON["u"].length <= 0)
+			if (newBlockJSON["u"].length <= 0)
 			{
-				delete newMailboxJSON["u"];
+				delete newBlockJSON["u"];
 			}
 		}
 		
 		//only mint new if there are new posts or a merged chain
-		if ((newMailboxJSON.hasOwnProperty("n") && newMailboxJSON["n"].length > 0) || (newMailboxJSON.hasOwnProperty("o") && newMailboxJSON["o"].length > 1))
+		if ((newBlockJSON.hasOwnProperty("n") && newBlockJSON["n"].length > 0) || (newBlockJSON.hasOwnProperty("o") && newBlockJSON["o"].length > 1))
 		{
-			var newMailbox = JSON.stringify(newMailboxJSON).toString();
+			var newBlock = JSON.stringify(newBlockJSON).toString();
 			
 			
-			console.log(newMailbox);
+			console.log(newBlock);
 			
 			
-			ipfs.add(new Buffer(newMailbox.toString()), function(err, res) {
+			ipfs.add(new Buffer(newBlock.toString()), function(err, res) {
 				if(err || !res)
 				{
 					return console.error(err);
 				}
 				
-				var mailboxResponse = res;
+				var blockResponse = res;
 				
 				
-				mailboxResponse.forEach(function(element, elementNumber) {
-					//store new mailbox hash in core directory
-					newestMailbox = element.Hash.toString();
+				blockResponse.forEach(function(element, elementNumber) {
+					//store new block hash in core directory
+					newestBlock = element.Hash.toString();
 					
-					mailboxes.push(newestMailbox);
+					blocks.push(newestBlock);
 					
 					//push to IPFS node
-					publishMailboxPush();
+					publishBlockPush();
 					
 					//write to file to restore on restart
-					writeIfNotExist("/tmp/IPFSchan/mailbox/newest/newest.txt", "", function(){
-						fs.writeFile("/tmp/IPFSchan/mailbox/newest/newest.txt", newestMailbox, function (err) {
+					writeIfNotExist("/tmp/IPFSchan/block/newest/newest.txt", "", function(){
+						fs.writeFile("/tmp/IPFSchan/block/newest/newest.txt", newestBlock, function (err) {
 							if (err)
 							{
 								console.log(err);
@@ -332,29 +332,29 @@ function createMailboxCallback()
 					
 					var currentTime = Date.now();
 					
-					mailboxCreationTimes.push(currentTime);
+					blockCreationTimes.push(currentTime);
 				});
 			});
 		}
 	}
 }
 
-function createMailbox()
+function createBlock()
 {
-	//clean mailboxCreationTimes
-	return cleanMailboxCreationTimes(function(){
-		createMailboxCallback();
+	//clean blockCreationTimes
+	return cleanBlockCreationTimes(function(){
+		createBlockCallback();
 		
-		//create new mailbox slower if there are many blocks recently, faster if there are few
+		//create new block slower if there are many blocks recently, faster if there are few
 		//all in milliseconds, the average block time minus the minimum, times the target number of blocks devided by the actual number of blocks, plus the minimum block time, plus one
 		//average block time is calculated by taking one hour in miliseconds and deviding it by the target blocks per hour
 		//minimum time is subtracted from average time so that if the number of blocks is equal to the target, the final sum is equal to averageBlockTime
-		//mailboxCreationTimes.length / targetBlocksPerHour is equal to one if the target is met, approaches zero as the number of blocks dwindles, and approaches infinity as the number of blocks increase
+		//blockCreationTimes.length / targetBlocksPerHour is equal to one if the target is met, approaches zero as the number of blocks dwindles, and approaches infinity as the number of blocks increase
 		//always add one at the very end to prevent a delay of zero
-		var delay = Math.min(maximumBlockTime, Math.ceil(((60 * 60 * 1000 / targetBlocksPerHour) - minimumBlockTime) * ((mailboxCreationTimes.length) / targetBlocksPerHour) + minimumBlockTime)) + 1;
+		var delay = Math.min(maximumBlockTime, Math.ceil(((60 * 60 * 1000 / targetBlocksPerHour) - minimumBlockTime) * ((blockCreationTimes.length) / targetBlocksPerHour) + minimumBlockTime)) + 1;
 		
 		
-		return setTimeout(createMailbox, delay);
+		return setTimeout(createBlock, delay);
 	});
 }
 
@@ -417,18 +417,18 @@ function maybeAddAsNewest (data)
 {
 	if (data.toString().length === 46)
 	{
-		if (!newestMailbox)
+		if (!newestBlock)
 		{
-			newestMailbox = data.toString();
+			newestBlock = data.toString();
 		}
 		else
 		{
-			mailboxesToMerge.push(data.toString());
+			blocksToMerge.push(data.toString());
 		}
 	}
 	
-	console.log("newestMailbox: " + newestMailbox);
-	console.log("JSON.stringify(mailboxesToMerge) " + JSON.stringify(mailboxesToMerge));
+	console.log("newestBlock: " + newestBlock);
+	console.log("JSON.stringify(blocksToMerge) " + JSON.stringify(blocksToMerge));
 }
 
 function addToPeerSites(newArr)
@@ -457,7 +457,7 @@ function addToPeerSites(newArr)
 	peerSitesList = tempArr;
 }
 
-function publishMailboxPull(callback)
+function publishBlockPull(callback)
 {
 	var addResultToLists = false;
 	var publishedObject = {};
@@ -465,7 +465,7 @@ function publishMailboxPull(callback)
 	if (!callback)
 	{
 		callback = function(publishedObject){
-			console.log("Successfully added mailbox and peers to lists");
+			console.log("Successfully added block and peers to lists");
 			
 			try
 			{
@@ -478,8 +478,8 @@ function publishMailboxPull(callback)
 				console.log(e);
 			}
 			
-			console.log("mailboxesToMerge: ");
-			console.log(mailboxesToMerge);
+			console.log("blocksToMerge: ");
+			console.log(blocksToMerge);
 		};
 		
 		addResultToLists = true;
@@ -493,7 +493,7 @@ function publishMailboxPull(callback)
 			
 			if (addResultToLists)
 			{
-				maybeAddAsNewest(publishedObject["IPFSchan"]["newestMailbox"]);
+				maybeAddAsNewest(publishedObject["IPFSchan"]["newestBlock"]);
 				addToPeerSites(publishedObject["IPFSchan"]["peerSites"]);
 			}
 		}
@@ -557,10 +557,10 @@ function publishMailboxPull(callback)
 	});
 }
 
-function publishMailboxPush()
+function publishBlockPush()
 {
 	//pull current object to preserve unrelated information
-	publishMailboxPull(function(publishedObject){
+	publishBlockPull(function(publishedObject){
 		if (!publishedObject)
 		{
 			publishedObject = {};
@@ -570,7 +570,7 @@ function publishMailboxPush()
 		
 		publishObject["IPFSchan"] = {};
 		
-		publishObject["IPFSchan"]["newestMailbox"] = newestMailbox;
+		publishObject["IPFSchan"]["newestBlock"] = newestBlock;
 		publishObject["IPFSchan"]["peerSites"] = peerSitesList.filter(function(element, position, array){
 			return array.indexOf(element) === position;
 		}).filter(function(element, position, array){
@@ -656,14 +656,14 @@ function main()
 	multer = require('multer');
 	
 	
-	//fill mailboxCreationTimes with dummy values to create baseline
+	//fill blockCreationTimes with dummy values to create baseline
 	var currentTime = Date.now();
 	//only if global variable is set
 	if (startQuick)
 	{
 		for (var i = 0; i < targetBlocksPerHour; i++)
 		{
-			mailboxCreationTimes.push(currentTime + i * 60 * 1000);
+			blockCreationTimes.push(currentTime + i * 60 * 1000);
 		}
 	}
 	
@@ -724,14 +724,14 @@ function main()
 	console.log("final config object: " + JSON.stringify(cfgObject));
 	
 	
-	fs.readFile("/tmp/IPFSchan/mailbox/newest/newest.txt", function (err, data) {
+	fs.readFile("/tmp/IPFSchan/block/newest/newest.txt", function (err, data) {
 		if (err)
 		{
-			console.log("Error reading file that stores initial mailbox");
+			console.log("Error reading file that stores initial block");
 			return console.log(err);
 		}
 		maybeAddAsNewest(data.toString());
-		console.log("newestMailbox: " + newestMailbox);
+		console.log("newestBlock: " + newestBlock);
 	});
 	
 	
@@ -739,24 +739,24 @@ function main()
 	ipfs = ipfsAPI(cfgObject["ipfsAPI"]["domain"], cfgObject["ipfsAPI"]["port"], cfgObject["ipfsAPI"]["options"]);
 	
 	
-	publishMailboxPull();
+	publishBlockPull();
 	
 	
 	//add at least one post (only the empty hash) so that /newest always has content
 	postsToMerge.push("QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH");
 	
-	if (lastMailboxRefresh < Date.now())
+	if (lastBlockRefresh < Date.now())
 	{
-		lastMailboxRefresh = Date.now() + 10 * 1000
-		setTimeout(createMailboxCallback, 10 * 1000);
+		lastBlockRefresh = Date.now() + 10 * 1000
+		setTimeout(createBlockCallback, 10 * 1000);
 	}
 	
 	
 	
 	//start auto-refresh from peer sites
 	refreshPeerSite();
-	//start creating mailboxes
-	createMailbox();
+	//start creating blocks
+	createBlock();
 	
 	
 	
@@ -832,7 +832,7 @@ function main()
 		if (IPFSHashMatch)
 		{
 			IPFSHashMatch.forEach(function(hash, matchNumber) {
-				//TODO: add to "unknown" list for adding to mailboxes
+				//TODO: add to "unknown" list for adding to blocks
 				userSubmittedHashes.push(hash);
 			});
 		}
@@ -866,11 +866,11 @@ function main()
 			htmlResponse.end(JSON.stringify(responseObject));
 			
 			
-			if (lastMailboxRefresh < Date.now())
+			if (lastBlockRefresh < Date.now())
 			{
-				lastMailboxRefresh = Date.now() + 10 * 1000
-				//temporarily step up refresh mailbox rate temporarily to get new posts into circulation
-				setTimeout(createMailboxCallback, 10 * 1000);
+				lastBlockRefresh = Date.now() + 10 * 1000
+				//temporarily step up refresh block rate temporarily to get new posts into circulation
+				setTimeout(createBlockCallback, 10 * 1000);
 			}
 		});
 		
@@ -902,7 +902,7 @@ function main()
 		//add at least one post (only the empty hash) so that /newest always has content
 		postsToMerge.push("QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH");
 		
-		response.end(newestMailbox.toString());
+		response.end(newestBlock.toString());
 	});
 	
 	app.get(/ipfs\/(.*)/, function(request, response) {
