@@ -910,7 +910,7 @@ function loadNext(continueUntilPost, continueForever, loadAll)
 function queueNewBlock()
 {
 	//TODO: change fragment automatically if it isn't 46 characters long or it's set to the current block or is blank?
-	document.getElementById("currentBlockHolder").innerHTML = "<a href='#" + newestBlock + "'>" + newestBlock + "</a>";
+	document.getElementById("currentBlockHolder").innerHTML = "<a href='#b" + newestBlock + "'>" + newestBlock + "</a>";
 
 	var parameterObject = {};
 	parameterObject["delay"] = 5 * 1000;
@@ -1365,26 +1365,122 @@ function setup(firstRun)
 	}
 }
 
+function getParametersAsObject()
+{
+	var result = {};
+	var search = location.search;
+	
+	if (search != "")
+	{
+		location.search.substr(1).split("&").forEach(function (item) {
+			var tmp = item.split("=");
+			result[decodeURIComponent(tmp[0])] = JSON.parse(decodeURIComponent(tmp[1]));
+		});
+	}
+	
+	return result;
+}
+
+function reloadWithGetParameters(getParameters)
+{
+	var url = window.location.href;
+	var hash = location.hash;
+	//remove hash
+	url = url.replace(hash, "");
+	//remove get parameters
+	url = url.replace(/\?.*/, "");
+	
+	if (Object.keys(getParameters).length > 0)
+	{
+		url += "?";
+		
+		for (var i = 0; i < Object.keys(getParameters).length; i++)
+		{
+			//if not the first run
+			if (i > 0)
+			{
+				url += "&";
+			}
+			url += encodeURIComponent(Object.keys(getParameters)[i]);
+			url += "=";
+			url += encodeURIComponent(JSON.stringify(getParameters[Object.keys(getParameters)[i]]));
+		}
+	}
+	
+	if (hash[1] == "b")
+	{
+		hash = "";
+	}
+	
+	window.location.href = url + hash;
+	
+	return true;
+}
+
 function main()
 {
-	currentSite = getProtocolAndDomain();
+	var currentSite = getProtocolAndDomain();
+	var getParameters = getParametersAsObject();
+	
+	if (!getParameters.hasOwnProperty("blocks") || !Array.isArray(getParameters["blocks"]))
+	{
+		getParameters["blocks"] = [];
+	}
+	else
+	{
+		getParameters["blocks"] = cleanIPFSHashArray(getParameters["blocks"]);
+	}
+	
+	if (!getParameters.hasOwnProperty("posts") || !Array.isArray(getParameters["posts"]))
+	{
+		getParameters["posts"] = [];
+	}
+	else
+	{
+		getParameters["posts"] = cleanIPFSHashArray(getParameters["posts"]);
+	}
 	
 	//add fragment to postList and block list
 	var currentFragment = location.hash.replace(/#(.*)/, "$1");
 	
 	if (currentFragment.length === 46)
 	{
-		postList.push(currentFragment);
-		postList = postList.filter(function(element, position, array) {
-			return array.indexOf(element) === position;
-		});
-		globalBlocks.unshift(currentFragment);
-		//ensure load next button is available
-		showLoadNextButton()
+		var originalPostsArrayLength = getParameters["posts"].length;
+		
+		getParameters["posts"].push(currentFragment);
+		
+		getParameters["posts"] = cleanIPFSHashArray(getParameters["posts"]);
+		
+		if (originalPostsArrayLength !== getParameters["posts"].length)
+		{
+			reloadWithGetParameters(getParameters);
+			
+			return true;
+		}
 	}
 	
-	setup(true);
-	loadSite(currentSite);
+	if (currentFragment.length === 47 && currentFragment[0] === "b")
+	{
+		getParameters["blocks"].unshift(currentFragment.slice(1));
+		
+		//TODO: refresh page with new get parameters
+		return reloadWithGetParameters(getParameters);
+	}
+	else
+	{
+		//add get parameters to post/block lists
+		globalBlocks = getParameters["blocks"];
+		postList = getParameters["posts"];
+		
+		//ensure load next button is available
+		if (globalBlocks.length > 0 || postList.length > 0)
+		{
+			showLoadNextButton()
+		}
+		
+		setup(true);
+		return loadSite(currentSite);
+	}
 }
 
 
