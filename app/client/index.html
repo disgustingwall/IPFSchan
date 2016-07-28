@@ -1383,6 +1383,11 @@ function getParametersAsObject()
 
 function reloadWithGetParameters(getParameters)
 {
+	if (getParameters === undefined)
+	{
+		getParameters = getParametersAsObject();
+	}
+	
 	var url = window.location.href;
 	var hash = location.hash;
 	//remove hash
