@@ -1397,21 +1397,32 @@ function reloadWithGetParameters(getParameters)
 	
 	if (Object.keys(getParameters).length > 0)
 	{
-		url += "?";
+		var getURLComponent = "";
 		
 		for (var i = 0; i < Object.keys(getParameters).length; i++)
 		{
-			//if not the first run
-			if (i > 0)
+			if (Object.keys(getParameters)[i] != undefined && Object.keys(getParameters)[i] != "" && Object.keys(getParameters)[i] != [])
 			{
-				url += "&";
+				if (getParameters[Object.keys(getParameters)[i]] != undefined && getParameters[Object.keys(getParameters)[i]] != "" && getParameters[Object.keys(getParameters)[i]] != [])
+				{
+					var encodedKey = encodeURIComponent(Object.keys(getParameters)[i]);
+					var encodedValue = encodeURIComponent(JSON.stringify(getParameters[Object.keys(getParameters)[i]]));
+					
+					//if not the first run
+					if (getURLComponent != "")
+					{
+						getURLComponent += "&";
+					}
+					
+					getURLComponent += encodedKey + "=" + encodedValue;
+				}
 			}
-			url += encodeURIComponent(Object.keys(getParameters)[i]);
-			url += "=";
-			url += encodeURIComponent(JSON.stringify(getParameters[Object.keys(getParameters)[i]]));
 		}
+		
+		url += "?" + getURLComponent;
 	}
 	
+	//if the hash text starts with "b", it's probably a block, so remove it
 	if (hash[1] == "b")
 	{
 		hash = "";
