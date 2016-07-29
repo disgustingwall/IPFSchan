@@ -116,9 +116,31 @@ function cleanBlockCreationTimes(callback)
 	return callback();
 }
 
-function refreshPeerNode()
+function refreshPeerNode(currentNode)
 {
 	//TODO: refresh peer nodes and call self
+	if (!currentNode)
+	{
+		currentNode = 0;
+	}
+	
+	return cleanBlockCreationTimes(function(){
+		if (currentNode >= peerNodesList.length || currentNode < 0)
+		{
+			currentNode = 0;
+		}
+		
+		if (peerNodesList.length > 0 && currentNode < peerNodesList.length)
+		{
+			publishBlockPull(peerNodesList[currentNode]);
+		}
+		
+		//delay devided by 2 to be twice as fast
+		var delay = Math.ceil((Math.min(maximumBlockTime, Math.ceil(((60 * 60 * 1000 / targetBlocksPerHour) - minimumBlockTime) * ((blockCreationTimes.length) / targetBlocksPerHour) + minimumBlockTime)) + 1) / 2);
+		
+		return setTimeout(refreshPeerNode, delay, currentNode + 1);
+	});
+
 }
 
 function refreshBlockResponse (response)
@@ -230,7 +252,7 @@ function createBlockCallback()
 	//this will prevent blocks downloaded from yourself from being re-added
 	for (var i = 0; i < blocksToMerge.length; i++)
 	{
-		if (blocks.indexOf(blocksToMerge[i]) !== -1)
+		if (blocks.indexOf(blocksToMerge[i]) !== -1 || foreignBlocks.indexOf(blocksToMerge[i]) !== -1)
 		{
 			blocksToMerge.splice(i, 1);
 			//removing an element from blocksToMerge would move a potentially duplicated block into the current position, so check it again
@@ -526,6 +548,7 @@ function publishBlockPull(target, callback)
 			if (addResultToLists)
 			{
 				maybeAddAsNewest(publishedObject["IPFSchan"]["newestBlock"]);
+				foreignBlocks.push(publishedObject["IPFSchan"]["newestBlock"]);
 				addToPeerNodes(publishedObject["IPFSchan"]["peerNodes"]);
 				addToPeerSites(publishedObject["IPFSchan"]["peerSites"]);
 			}
