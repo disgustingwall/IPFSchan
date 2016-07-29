@@ -252,12 +252,9 @@ function createBlockCallback()
 	//this will prevent blocks downloaded from yourself from being re-added
 	for (var i = 0; i < blocksToMerge.length; i++)
 	{
-		if (blocks.indexOf(blocksToMerge[i]) !== -1 || foreignBlocks.indexOf(blocksToMerge[i]) !== -1)
-		{
-			blocksToMerge.splice(i, 1);
-			//removing an element from blocksToMerge would move a potentially duplicated block into the current position, so check it again
-			i--;
-		}
+		blocksToMerge = blocksToMerge.filter(function(element, position, array) {
+			return (blocks.indexOf(blocksToMerge[i]) === -1 && foreignBlocks.indexOf(blocksToMerge[i]) === -1);
+		});
 	}
 	
 	//only run if there is something to commit
