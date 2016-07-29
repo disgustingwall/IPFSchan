@@ -491,7 +491,7 @@ function publishBlockPull(target, callback)
 		target = ownID;
 	}
 	
-	var addResultToLists = false;
+	var addResultToLists = true;
 	var publishedObject = {};
 	
 	if (!callback)
