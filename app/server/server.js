@@ -480,9 +480,9 @@ function addOwnID()
 
 function publishBlockPull(target, callback)
 {
-	if (target === undefined || target === null)
+	if (target === undefined || target === null || target.length === 0)
 	{
-		return false;
+		target = ownID;
 	}
 	
 	var addResultToLists = false;
