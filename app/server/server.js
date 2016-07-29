@@ -116,6 +116,11 @@ function cleanBlockCreationTimes(callback)
 	return callback();
 }
 
+function refreshPeerNode()
+{
+	//TODO: refresh peer nodes and call self
+}
+
 function refreshBlockResponse (response)
 {
 	var str = '';
@@ -149,7 +154,7 @@ function refreshBlockResponse (response)
 	});
 }
 
-function refreshBlock(site)
+function refreshBlockFrom(site)
 {
 	var protocol = http;
 	
@@ -201,16 +206,15 @@ function refreshPeerSite(currentPeerSite)
 		currentPeerSite = 0;
 	}
 	
-	cleanBlockCreationTimes(function(){
+	return cleanBlockCreationTimes(function(){
 		if (currentPeerSite >= peerSitesList.length || currentPeerSite < 0)
 		{
 			currentPeerSite = 0;
 		}
 		
-		
 		if (peerSitesList.length > 0)
 		{
-			refreshBlock(peerSitesList[currentPeerSite]);
+			refreshBlockFrom(peerSitesList[currentPeerSite]);
 		}
 		
 		//delay devided by 2 to be twice as fast
@@ -766,7 +770,8 @@ function main()
 	setTimeout(createBlockCallback, 10 * 1000);
 	
 	
-	//TODO: start refreshing from peer nodes
+	//start refreshing from peer nodes
+	refreshPeerNode();
 	//start auto-refresh from peer sites
 	refreshPeerSite();
 	//start creating blocks
