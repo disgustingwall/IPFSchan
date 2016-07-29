@@ -229,6 +229,8 @@ function createBlockCallback()
 		if (blocks.indexOf(blocksToMerge[i]) !== -1)
 		{
 			blocksToMerge.splice(i, 1);
+			//removing an element from blocksToMerge would move a potentially duplicated block into the current position, so check it again
+			i--;
 		}
 	}
 	
