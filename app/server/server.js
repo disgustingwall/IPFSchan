@@ -760,11 +760,8 @@ function main()
 	//add at least one post (only the empty hash) so that /newest always has content
 	postsToMerge.push("QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH");
 	
-	if (lastBlockRefresh < Date.now())
-	{
-		lastBlockRefresh = Date.now() + 10 * 1000
-		setTimeout(createBlockCallback, 10 * 1000);
-	}
+	lastBlockRefresh = Date.now() + 10 * 1000
+	setTimeout(createBlockCallback, 10 * 1000);
 	
 	
 	//TODO: start refreshing from peer nodes
@@ -885,7 +882,7 @@ function main()
 			if (lastBlockRefresh < Date.now())
 			{
 				lastBlockRefresh = Date.now() + 10 * 1000
-				//temporarily step up refresh block rate temporarily to get new posts into circulation
+				//temporarily step up refresh block rate to get new posts into circulation
 				setTimeout(createBlockCallback, 10 * 1000);
 			}
 		});
