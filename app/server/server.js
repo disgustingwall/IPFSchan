@@ -34,7 +34,9 @@ var foreignBlocks = [];
 var userSubmittedHashes = [];
 var blockCreationTimes = [];
 //blank entries are to give the site respite if it has itself in its array
+var peerNodesList = [];
 var peerSitesList = ["https://ipfschan.herokuapp.com"];
+var ownID = "";
 
 function isEmpty(obj)
 {
@@ -250,9 +252,7 @@ function createBlockCallback()
 			}
 			
 			//remove duplicates
-			newBlockJSON["o"] = newBlockJSON["o"].filter(function(element, position, array) {
-				return array.indexOf(element) === position;
-			});
+			newBlockJSON["o"] = filterDuplicates(newBlockJSON["o"]);
 			
 			if (newBlockJSON["o"].length <= 0)
 			{
@@ -266,9 +266,7 @@ function createBlockCallback()
 			newBlockJSON["n"] = postsToMerge.splice(0, 128);
 			
 			//remove duplicates
-			newBlockJSON["n"] = newBlockJSON["n"].filter(function(element, position, array) {
-				return array.indexOf(element) === position;
-			});
+			newBlockJSON["n"] = filterDuplicates(newBlockJSON["n"]);
 			
 			if (newBlockJSON["n"].length <= 0)
 			{
@@ -283,9 +281,7 @@ function createBlockCallback()
 			userSubmittedHashes = [];
 			
 			//remove duplicates
-			newBlockJSON["u"] = newBlockJSON["u"].filter(function(element, position, array) {
-				return array.indexOf(element) === position;
-			});
+			newBlockJSON["u"] = filterDuplicates(newBlockJSON["u"]);
 			
 			if (newBlockJSON["u"].length <= 0)
 			{
@@ -434,34 +430,61 @@ function maybeAddAsNewest (data)
 	console.log("JSON.stringify(blocksToMerge) " + JSON.stringify(blocksToMerge));
 }
 
-function addToPeerSites(newArr)
+function filterDuplicates(arr)
 {
-	var tempArr = peerSitesList;
-	
-	for(var i = 0; i < newArr.length; i++)
-	{
-		tempArr.push(newArr[i]);
-	}
-	
-	//remove duplicates
-	tempArr = tempArr.filter(function(element, position, array) {
-		return array.indexOf(element) === position;
-	});
-	
-	//remove blanks
-	tempArr = tempArr.filter(function(element, position, array) {
-		if (element.length === 0)
-		{
-			return false;
-		}
-		return true;
-	});
-	
-	peerSitesList = tempArr;
+	return arr.filter(function(element, position, array){return array.indexOf(element) === position;});
 }
 
-function publishBlockPull(callback)
+function filterBlanks(arr)
 {
+	return arr.filter(function(element, position, array){return !(element === undefined || element === null || element.length === 0);});
+}
+
+function doubleFilter(arr)
+{
+	return filterBlanks(filterDuplicates(arr));
+}
+
+function addToPeerNodes(arr)
+{
+	peerNodesList = doubleFilter(peerNodesList.concat(arr));
+	
+	return peerNodesList;
+}
+
+function addToPeerSites(arr)
+{
+	peerSitesList = doubleFilter(peerSitesList.concat(arr));
+	
+	return peerSitesList;
+}
+
+function addOwnID()
+{
+	return ipfs.id(function(err, res){
+		if (err)
+		{
+			return console.log(err);
+		}
+		
+		console.log("current node ID: " + res["ID"]);
+		
+		ownID = res["ID"];
+		peerNodesList.push(ownID);
+		
+		peerNodesList = doubleFilter(peerNodesList);
+		
+		return peerNodesList;
+	});
+}
+
+function publishBlockPull(target, callback)
+{
+	if (target === undefined || target === null)
+	{
+		return false;
+	}
+	
 	var addResultToLists = false;
 	var publishedObject = {};
 	
@@ -497,6 +520,7 @@ function publishBlockPull(callback)
 			if (addResultToLists)
 			{
 				maybeAddAsNewest(publishedObject["IPFSchan"]["newestBlock"]);
+				addToPeerNodes(publishedObject["IPFSchan"]["peerNodes"]);
 				addToPeerSites(publishedObject["IPFSchan"]["peerSites"]);
 			}
 		}
@@ -508,62 +532,50 @@ function publishBlockPull(callback)
 		callback(publishedObject);
 	};
 	
-	ipfs.id(function(err, res){
+	ipfs.name.resolve(target, function(err, res){
 		if (err)
 		{
+			callback(publishedObject);
 			return console.log(err);
 		}
 		
-		var IDresponse = res;
+		console.log(res);
 		
-		console.log("response ID: " + res["ID"]);
-		
-		
-		ipfs.name.resolve(IDresponse["ID"], function(err, res){
-			if (err)
-			{
-				callback(publishedObject);
-				return console.log(err);
-			}
-			
-			console.log(res);
-			
-			if (res["Path"])
-			{
-				ipfs.cat(res["Path"], function (err, res){
-					if(err || !res)
-					{
-						callback(publishedObject);
-						return console.error(err);
-					}
+		if (res["Path"])
+		{
+			ipfs.cat(res["Path"], function (err, res){
+				if(err || !res)
+				{
+					callback(publishedObject);
+					return console.error(err);
+				}
+				
+				if(res.readable) {
+					// Returned as a stream
+					// Returned as a stream
+					var string = '';
+					res.on('data', function(chunk) {
+						string += chunk;
+					});
 					
-					if(res.readable) {
-						// Returned as a stream
-						// Returned as a stream
-						var string = '';
-						res.on('data', function(chunk) {
-							string += chunk;
-						});
-						
-						res.on('end', function() {
-							finishPublish(string, callback);
-						});
-					}
-					else
-					{
-						// Returned as a string
-						finishPublish(res, callback);
-					}
-				});
-			}
-		});
+					res.on('end', function() {
+						finishPublish(string, callback);
+					});
+				}
+				else
+				{
+					// Returned as a string
+					finishPublish(res, callback);
+				}
+			});
+		}
 	});
 }
 
 function publishBlockPush()
 {
 	//pull current object to preserve unrelated information
-	publishBlockPull(function(publishedObject){
+	publishBlockPull(ownID, function(publishedObject){
 		if (!publishedObject)
 		{
 			publishedObject = {};
@@ -574,11 +586,8 @@ function publishBlockPush()
 		publishObject["IPFSchan"] = {};
 		
 		publishObject["IPFSchan"]["newestBlock"] = newestBlock;
-		publishObject["IPFSchan"]["peerSites"] = peerSitesList.filter(function(element, position, array){
-			return array.indexOf(element) === position;
-		}).filter(function(element, position, array){
-			return !(element === "");
-		});
+		publishObject["IPFSchan"]["peerNodes"] = doubleFilter(peerNodesList);
+		publishObject["IPFSchan"]["peerSites"] = doubleFilter(peerSitesList);
 		
 		ipfs.add(new Buffer(JSON.stringify(publishObject).toString()), function(err, res) {
 			if(err || !res)
@@ -744,8 +753,8 @@ function main()
 	app = express();
 	ipfs = ipfsAPI(cfgObject["ipfsAPI"]["domain"], cfgObject["ipfsAPI"]["port"], cfgObject["ipfsAPI"]["options"]);
 	
-	
-	publishBlockPull();
+	addOwnID();
+	publishBlockPull(ownID);
 	
 	
 	//add at least one post (only the empty hash) so that /newest always has content
@@ -758,7 +767,7 @@ function main()
 	}
 	
 	
-	
+	//TODO: start refreshing from peer nodes
 	//start auto-refresh from peer sites
 	refreshPeerSite();
 	//start creating blocks
@@ -803,7 +812,7 @@ function main()
 		}
 		
 		//scrape postText for URLs and add them to peerSitesList
-		//TODO: better URL regex
+		//TODO: replace with attempt to JSON.parse the input and pull nodes/sites/posts from that
 		var newURLmatch = postText.match(/(((https?:\/\/)?(([\da-z\.-]+)\.([a-z\.]{2,6})))(:(\d+))?)([\/\w \.-]*)*\/?/g);
 		
 		if (newURLmatch)
@@ -823,9 +832,7 @@ function main()
 			});
 			
 			//remove duplicates
-			peerSitesList = peerSitesList.filter(function(element, position, array) {
-				return array.indexOf(element) === position;
-			});
+			peerSitesList = filterDuplicates(peerSitesList);
 			
 			console.log(JSON.stringify(peerSitesList));
 		}
@@ -971,7 +978,7 @@ function main()
 		var HTMLrequest = req;
 		var HTMLresponse = res;
 		
-		//TODO: add aes.js to ipfs
+		//add aes.js to ipfs
 		fs.readFile(__dirname + "/../client/aes.js", function (err, data) {
 			if (err)
 			{
@@ -982,7 +989,7 @@ function main()
 					//add other headers here...
 				});
 				
-				//TODO: just write something so that onion.city works
+				//just write something so that onion.city works
 				//TODO: does the empty string count?
 				HTMLresponse.end("Sorry, but the aes.js library cannot be found. Redirecting you to the generic upload page");
 				
@@ -999,7 +1006,7 @@ function main()
 						//add other headers here...
 					});
 					
-					//TODO: just write something so that onion.city works
+					//just write something so that onion.city works
 					//TODO: does the empty string count?
 					HTMLresponse.end("Sorry, but something seems to be wrong with the aes javascript file or my IPFS connection. Redirecting you to the generic upload page");
 					
@@ -1017,7 +1024,7 @@ function main()
 							//add other headers here...
 						});
 						
-						//TODO: just write something so that onion.city works
+						//just write something so that onion.city works
 						//TODO: does the empty string count?
 						HTMLresponse.end("Sorry, but the index page cannot be found. Redirecting you to the generic upload page");
 						
@@ -1034,7 +1041,7 @@ function main()
 								//add other headers here...
 							});
 							
-							//TODO: just write something so that onion.city works
+							//just write something so that onion.city works
 							//TODO: does the empty string count?
 							HTMLresponse.end("Sorry, but something seems to be wrong with the index page or my IPFS connection. Redirecting you to the generic upload page");
 							
@@ -1057,7 +1064,7 @@ function main()
 									//add other headers here...
 								});
 								
-								//TODO: just write something so that onion.city works
+								//just write something so that onion.city works
 								//TODO: does the empty string count?
 								return HTMLresponse.end("");
 							}
