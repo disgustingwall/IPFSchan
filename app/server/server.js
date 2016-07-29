@@ -754,7 +754,7 @@ function main()
 	ipfs = ipfsAPI(cfgObject["ipfsAPI"]["domain"], cfgObject["ipfsAPI"]["port"], cfgObject["ipfsAPI"]["options"]);
 	
 	addOwnID();
-	publishBlockPull(ownID);
+	publishBlockPull();
 	
 	
 	//add at least one post (only the empty hash) so that /newest always has content
