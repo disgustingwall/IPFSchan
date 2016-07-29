@@ -474,6 +474,12 @@ function addToPeerNodes(arr)
 {
 	peerNodesList = doubleFilter(peerNodesList.concat(arr));
 	
+	//remove ownID
+	if (peerNodesList.indexOf(ownID) !== -1)
+	{
+		peerNodesList.splice(peerNodesList.indexOf(ownID), 1);
+	}
+	
 	return peerNodesList;
 }
 
@@ -609,7 +615,8 @@ function publishBlockPush()
 		publishObject["IPFSchan"] = {};
 		
 		publishObject["IPFSchan"]["newestBlock"] = newestBlock;
-		publishObject["IPFSchan"]["peerNodes"] = doubleFilter(peerNodesList);
+		//add ownID in order to broadcast our ID to other nodes
+		publishObject["IPFSchan"]["peerNodes"] = doubleFilter(peerNodesList.concat(ownID));
 		publishObject["IPFSchan"]["peerSites"] = doubleFilter(peerSitesList);
 		
 		ipfs.add(new Buffer(JSON.stringify(publishObject).toString()), function(err, res) {
