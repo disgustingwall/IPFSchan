@@ -484,7 +484,7 @@ function addToPeerSites(arr)
 	return peerSitesList;
 }
 
-function addOwnID()
+function findOwnID()
 {
 	return ipfs.id(function(err, res){
 		if (err)
@@ -495,11 +495,8 @@ function addOwnID()
 		console.log("current node ID: " + res["ID"]);
 		
 		ownID = res["ID"];
-		peerNodesList.push(ownID);
 		
-		peerNodesList = doubleFilter(peerNodesList);
-		
-		return peerNodesList;
+		return ownID;
 	});
 }
 
@@ -779,7 +776,7 @@ function main()
 	app = express();
 	ipfs = ipfsAPI(cfgObject["ipfsAPI"]["domain"], cfgObject["ipfsAPI"]["port"], cfgObject["ipfsAPI"]["options"]);
 	
-	addOwnID();
+	findOwnID();
 	publishBlockPull();
 	
 	
