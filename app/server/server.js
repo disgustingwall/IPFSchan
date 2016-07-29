@@ -125,7 +125,7 @@ function refreshBlockResponse (response)
 {
 	var str = '';
 	
-	//another chunk of data has been recieved, so append it to `str`
+	//another chunk of data has been recieved, so append it to "str"
 	response.on('data', function (chunk) {
 		str += chunk;
 	});
