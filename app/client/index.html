@@ -740,7 +740,7 @@ function cleanIPFSHashArray(hashArray)
 {
 	//remove blanks
 	hashArray = hashArray.filter(function(element, position, array) {
-		if (element.length !== 46)
+		if (element === undefined || element === null || element.length !== 46)
 		{
 			return false;
 		}
@@ -1422,7 +1422,7 @@ function reloadWithGetParameters(getParameters)
 		url += "?" + getURLComponent;
 	}
 	
-	//if the hash text starts with "b", it's probably a block, so remove it
+	//if the hash text starts with "b", it is probably a block, so remove it
 	if (hash[1] == "b")
 	{
 		hash = "";

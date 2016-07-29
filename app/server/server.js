@@ -312,27 +312,30 @@ function createBlockCallback()
 				
 				
 				blockResponse.forEach(function(element, elementNumber) {
-					//store new block hash in core directory
-					newestBlock = element.Hash.toString();
-					
-					blocks.push(newestBlock);
-					
-					//push to IPFS node
-					publishBlockPush();
-					
-					//write to file to restore on restart
-					writeIfNotExist("/tmp/IPFSchan/block/newest/newest.txt", "", function(){
-						fs.writeFile("/tmp/IPFSchan/block/newest/newest.txt", newestBlock, function (err) {
-							if (err)
-							{
-								console.log(err);
-							}
+					if (element.hasOwnProperty("Hash"))
+					{
+						//store new block hash in core directory
+						newestBlock = element["Hash"].toString();
+						
+						blocks.push(newestBlock);
+						
+						//push to IPFS node
+						publishBlockPush();
+						
+						//write to file to restore on restart
+						writeIfNotExist("/tmp/IPFSchan/block/newest/newest.txt", "", function(){
+							fs.writeFile("/tmp/IPFSchan/block/newest/newest.txt", newestBlock, function (err) {
+								if (err)
+								{
+									console.log(err);
+								}
+							});
 						});
-					});
-					
-					var currentTime = Date.now();
-					
-					blockCreationTimes.push(currentTime);
+						
+						var currentTime = Date.now();
+						
+						blockCreationTimes.push(currentTime);
+					}
 				});
 			});
 		}
@@ -585,14 +588,17 @@ function publishBlockPush()
 			
 			
 			res.forEach(function(text, textNumber) {
-				ipfs.name.publish(text["Hash"], function(err, res){
-					if (err)
-					{
-						return console.log(err);
-					}
-					
-					console.log("published object: " + JSON.stringify(res));
-				});
+				if (text.hasOwnProperty("Hash"))
+				{
+					ipfs.name.publish(text["Hash"], function(err, res){
+						if (err)
+						{
+							return console.log(err);
+						}
+						
+						console.log("published object: " + JSON.stringify(res));
+					});
+				}
 			});
 		});
 	});
@@ -857,8 +863,11 @@ function main()
 			
 			
 			textResponse.forEach(function(text, textNumber) {
-				postsToMerge.push(text["Hash"]);
-				responseObject["t"] = text["Hash"];
+				if (text.hasOwnProperty("Hash"))
+				{
+					postsToMerge.push(text["Hash"]);
+					responseObject["t"] = text["Hash"];
+				}
 			});
 			
 			
@@ -1039,16 +1048,19 @@ function main()
 						
 						
 						return IPFSResponse.forEach(function(element, elementNumber) {
-							console.log("redirecting index to " + "/ipfs/" + element.Hash.toString());
-							
-							HTMLresponse.writeHead(302, {
-								'Location': 'http://' + req.get('host') + '/ipfs/' + element.Hash.toString()
-								//add other headers here...
-							});
-							
-							//TODO: just write something so that onion.city works
-							//TODO: does the empty string count?
-							return HTMLresponse.end("");
+							if (element.hasOwnProperty("Hash"))
+							{
+								console.log("redirecting index to " + "/ipfs/" + element["Hash"].toString());
+								
+								HTMLresponse.writeHead(302, {
+									'Location': 'http://' + req.get('host') + '/ipfs/' + element["Hash"].toString()
+									//add other headers here...
+								});
+								
+								//TODO: just write something so that onion.city works
+								//TODO: does the empty string count?
+								return HTMLresponse.end("");
+							}
 						});
 					});
 				});
