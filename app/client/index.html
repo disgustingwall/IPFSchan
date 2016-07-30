@@ -926,38 +926,50 @@ function queueNewBlock()
 	document.getElementById("newPostsHolder").style.display = "none";
 }
 
-function storeNewestBlock(hash, parameterObject)
+function storeNewestBlock(response, parameterObject)
 {
 	if (!parameterObject)
 	{
 		parameterObject = {};
 	}
-
+	
 	if (!parameterObject.hasOwnProperty("delay"))
 	{
 		parameterObject["delay"] = 5 * 1000;
 	}
-
-	var oldBlock = newestBlock;
-	newestBlock = hash;
-
-	if (newestBlock != oldBlock)
+	
+	try
 	{
-		if (document.getElementById("autoLoadPosts").checked)
+		var responseObject = JSON.parse(response);
+		
+		if (responseObject.hasOwnProperty("block") && responseObject["block"] && responseObject["block"].length === 46)
 		{
-			queueNewBlock();
-		}
-		else
-		{
-			document.getElementById("newPostsHolder").style.display = "";
+			var oldBlock = newestBlock;
+			newestBlock = responseObject["block"];
+
+			if (newestBlock != oldBlock)
+			{
+				if (document.getElementById("autoLoadPosts").checked)
+				{
+					queueNewBlock();
+				}
+				else
+				{
+					document.getElementById("newPostsHolder").style.display = "";
+				}
+			}
+			else
+			{
+				if (document.getElementById("autoUpdate").checked)
+				{
+					setTimeout(refreshNewestBlock, parameterObject["delay"], {"delay": Math.floor(parameterObject["delay"] * 1.5)});
+				}
+			}
 		}
 	}
-	else
+	catch (e)
 	{
-		if (document.getElementById("autoUpdate").checked)
-		{
-			setTimeout(refreshNewestBlock, parameterObject["delay"], {"delay": Math.floor(parameterObject["delay"] * 1.5)});
-		}
+		console.log(e);
 	}
 }
 
@@ -975,24 +987,30 @@ function refreshNewestBlock(parameterObject)
 
 function getNewestBlock(responseText, parameterObject)
 {
-	if (responseText.length === 46)
+	try
 	{
-		//if we were searching for a site until now, we should do a final setup to finalize all those settings
-		if (foundSite === false)
+		var responseObject = JSON.parse(responseText);
+		
+		if (responseObject.hasOwnProperty("block") && responseObject["block"] && responseObject["block"].length === 46)
 		{
-			setup(false);
+			//if we were searching for a site until now, we should do a final setup to finalize all those settings
+			if (foundSite === false)
+			{
+				setup(false);
+			}
+			
+			//if we're here, it means we're done loading sites
+			foundSite = true;
+			storeNewestBlock(responseText, parameterObject);
+			return getBlock([responseObject["block"]]);
 		}
-		
-		
-		//if we're here, it means we're done loading sites
-		foundSite = true;
-		storeNewestBlock(responseText, parameterObject);
-		return getBlock([responseText]);
 	}
-	else
+	catch (e)
 	{
-		return loadNextServer(parameterObject);
+		console.log(e);
 	}
+	
+	return loadNextServer(parameterObject);
 }
 
 function loadSite(site)

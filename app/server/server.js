@@ -156,22 +156,44 @@ function refreshBlockResponse (response)
 	response.on('end', function () {
 		console.log("string received from foreign host: " + str);
 		
-		//if foreignNewest is really an IPFS hash
-		//TODO: better checking
-		if (str.length === 46)
+		try
 		{
-			//only process if foreign newest is actually new (foreign site is active)
-			if (foreignBlocks.indexOf(str) === -1)
+			var responseObject = JSON.parse(str);
+			
+			if (responseObject.hasOwnProperty("block") && responseObject["block"] && responseObject["block"].length === 46)
 			{
-				foreignBlocks.push(str);
-				blocksToMerge.push(str);
+				var blockString = responseObject["block"];
+				
+				//if foreignNewest is really an IPFS hash
+				//TODO: better checking
+				if (blockString.length === 46)
+				{
+					//only process if foreign newest is actually new (foreign site is active)
+					if (foreignBlocks.indexOf(blockString) === -1)
+					{
+						foreignBlocks.push(blockString);
+						blocksToMerge.push(blockString);
+					}
+				}
+				else
+				{
+					console.log("invalid IPFS hash received from foreign host");
+					//TODO: add a failure to a list for this host and reorganize the list to put sites with the largest number of bad responses at the end
+					//TODO: scrape result for new URLs
+				}
+			}
+			
+			if (responseObject.hasOwnProperty("id") && responseObject["id"] && responseObject["id"] === 46)
+			{
+				if (responseObject["id"].length === 46)
+				{
+					addToPeerNodes(responseObject["id"]);
+				}
 			}
 		}
-		else
+		catch (e)
 		{
-			console.log("invalid IPFS hash received from foreign host");
-			//TODO: add a failure to a list for this host and reorganize the list to put sites with the largest number of bad responses at the end
-			//TODO: scrape result for new URLs
+			console.log(e);
 		}
 	});
 }
@@ -944,9 +966,15 @@ function main()
 		}
 		
 		//add at least one post (only the empty hash) so that /newest always has content
-		postsToMerge.push("QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH");
+		//TODO: is this really nesecary?
+		//postsToMerge.push("QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH");
 		
-		response.end(newestBlock.toString());
+		var responseObject = {};
+		
+		responseObject["block"] = newestBlock.toString();
+		responseObject["id"] = ownID.toString();
+		
+		response.end(JSON.stringify(responseObject));
 	});
 	
 	app.get(/ipfs\/(.*)/, function(request, response) {
@@ -1077,7 +1105,8 @@ function main()
 						}
 						
 						//add at least one post (only the empty hash) so that /newest always has content
-						postsToMerge.push("QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH");
+						//TODO: is this really nesecary?
+						//postsToMerge.push("QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH");
 						
 						var IPFSResponse = res;
 						
