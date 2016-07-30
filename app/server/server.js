@@ -810,7 +810,10 @@ function main()
 	
 	
 	//add at least one post (only the empty hash) so that /newest always has content
-	postsToMerge.push("QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH");
+	if (!newestBlock)
+	{
+		postsToMerge.push("QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH");
+	}
 	
 	lastBlockRefresh = Date.now() + 10 * 1000
 	setTimeout(createBlockCallback, 10 * 1000);
@@ -966,8 +969,10 @@ function main()
 		}
 		
 		//add at least one post (only the empty hash) so that /newest always has content
-		//TODO: is this really nesecary?
-		//postsToMerge.push("QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH");
+		if (!newestBlock)
+		{
+			postsToMerge.push("QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH");
+		}
 		
 		var responseObject = {};
 		
@@ -1105,8 +1110,10 @@ function main()
 						}
 						
 						//add at least one post (only the empty hash) so that /newest always has content
-						//TODO: is this really nesecary?
-						//postsToMerge.push("QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH");
+						if (!newestBlock)
+						{
+							postsToMerge.push("QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH");
+						}
 						
 						var IPFSResponse = res;
 						
