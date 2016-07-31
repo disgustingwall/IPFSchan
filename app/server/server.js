@@ -226,7 +226,7 @@ function refreshBlockFrom(site)
 		
 		try
 		{
-			var req = protocol.request(site + "/newest", refreshBlockResponse);
+			var req = protocol.request(site + "/status", refreshBlockResponse);
 			req.on('error', function(err) {
 				console.log(err);
 			});
@@ -811,7 +811,7 @@ function main()
 	findOwnID();
 	
 	
-	//add at least one post (only the empty hash) so that /newest always has content
+	//add at least one post (only the empty hash) so that /status always has content
 	if (!newestBlock)
 	{
 		postsToMerge.push("QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH");
@@ -960,7 +960,7 @@ function main()
 		res.end();
 	});
 	
-	app.get(/newest/, function(request, response) {
+	app.get(/status/, function(request, response) {
 		if (request.headers.origin)
 		{
 			if (!(request.headers.origin === ""))
@@ -970,7 +970,7 @@ function main()
 			}
 		}
 		
-		//add at least one post (only the empty hash) so that /newest always has content
+		//add at least one post (only the empty hash) so that /status always has content
 		if (!newestBlock)
 		{
 			postsToMerge.push("QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH");
@@ -1111,7 +1111,7 @@ function main()
 							return console.error(err);
 						}
 						
-						//add at least one post (only the empty hash) so that /newest always has content
+						//add at least one post (only the empty hash) so that /status always has content
 						if (!newestBlock)
 						{
 							postsToMerge.push("QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH");

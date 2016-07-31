@@ -982,7 +982,7 @@ function refreshNewestBlock(parameterObject)
 		siteToLoadFrom = getProtocolAndDomain();
 	}
 	
-	webRequest(siteToLoadFrom + "/newest", storeNewestBlock, parameterObject);
+	webRequest(siteToLoadFrom + "/status", storeNewestBlock, parameterObject);
 }
 
 function getNewestBlock(responseText, parameterObject)
@@ -1015,7 +1015,7 @@ function getNewestBlock(responseText, parameterObject)
 
 function loadSite(site)
 {
-	webRequest(site + "/newest", getNewestBlock, {"currentSiteLocation": siteList.indexOf(site)}, loadNextServer);
+	webRequest(site + "/status", getNewestBlock, {"currentSiteLocation": siteList.indexOf(site)}, loadNextServer);
 }
 
 function postResponseClear(id)
