@@ -866,45 +866,76 @@ function main()
 			postText = postText + htmlRequest.body.postText;
 		}
 		
-		//scrape postText for URLs and add them to peerSitesList
-		//TODO: replace with attempt to JSON.parse the input and pull nodes/sites/posts from that
-		var newURLmatch = postText.match(/(((https?:\/\/)?(([\da-z\.-]+)\.([a-z\.]{2,6})))(:(\d+))?)([\/\w \.-]*)*\/?/g);
-		
-		if (newURLmatch)
+		//attempt to parse response text, and pull IDs/URLs/hashes if valid
+		try
 		{
-			newURLmatch.forEach(function(site, siteNumber) {
-				var siteNormalized = site.replace(/(((https?:\/\/)?(([\da-z\.-]+)\.([a-z\.]{2,6})))(:(\d+))?)([\/\w \.-]*)*\/?/, "$1");
-				var protocol = "";
-				
-				siteNormalizedMatches = siteNormalized.match(/(((https?:\/\/)?(([\da-z\.-]+)\.([a-z\.]{2,6})))(:(\d+))?)([\/\w \.-]*)*\/?/);
-				
-				if (siteNormalizedMatches[3] !== "https://" && siteNormalizedMatches[3] !== "http://")
-				{
-					siteNormalized = "http://" + siteNormalized;
+			var dataObject = JSON.stringify(postText);
+
+			//add IDs to peer nodes
+			if (dataObject.hasOwnProperty("IDs") && Array.isArray(dataObject("IDs")))
+			{
+				dataObject["IDs"].forEach(function (element, elementNumber){
+					if (element.length === 46)
+					{
+						addToPeerNodes(element);
+					}
 				}
-				
-				peerSitesList.push(siteNormalized);
-			});
-			
-			//remove duplicates
-			peerSitesList = filterDuplicates(peerSitesList);
-			
-			console.log(JSON.stringify(peerSitesList));
+			}
+
+			if (dataObject.hasOwnProperty("Servers") && Array.isArray(dataObject["Servers"]))
+			{
+				dataObject["Servers"].forEach(function (element, elementNumber){
+					//pull URLs from element and do (bad) verification at the same time
+					var newURLmatch = element.match(/(((https?:\/\/)?(([\da-z\.-]+)\.([a-z\.]{2,6})))(:(\d+))?)([\/\w \.-]*)*\/?/g);
+
+					if (newURLmatch)
+					{
+						newURLmatch.forEach(function(site, siteNumber) {
+							var siteNormalized = site.replace(/(((https?:\/\/)?(([\da-z\.-]+)\.([a-z\.]{2,6})))(:(\d+))?)([\/\w \.-]*)*\/?/, "$1");
+							var protocol = "";
+
+							siteNormalizedMatches = siteNormalized.match(/(((https?:\/\/)?(([\da-z\.-]+)\.([a-z\.]{2,6})))(:(\d+))?)([\/\w \.-]*)*\/?/);
+
+							if (siteNormalizedMatches[3] !== "https://" && siteNormalizedMatches[3] !== "http://")
+							{
+								siteNormalized = "http://" + siteNormalized;
+							}
+
+							peerSitesList.push(siteNormalized);
+						});
+
+						//remove duplicates
+						peerSitesList = filterDuplicates(peerSitesList);
+
+						console.log(JSON.stringify(peerSitesList));
+					}
+				}
+			}
+
+			if (dataObject.hasOwnProperty("Blocks") && Array.isArray(dataObject["Blocks"]))
+			{
+				dataObject["Blocks"].forEach(function (element, elementNumber){
+					if (element.length === 46)
+					{
+						blocksToMerge.push(element);
+					}
+				});
+			}
+
+			if (dataObject.hasOwnProperty("Posts") && Array.isArray(dataObject["Posts"]))
+			{
+				dataObject["Blocks"].forEach(function (element, elementNumber){
+					if (element.length === 46)
+					{
+						postsToMerge.push(element);
+					}
+				}
+			}
 		}
-		
-		//IPFS hash scraper
-		//disabled: trying to load hashes that aren't real causes problems in the client
-		/*
-		var IPFSHashMatch = postText.match(/[\w]{46}/g);
-		
-		if (IPFSHashMatch)
+		catch (e)
 		{
-			IPFSHashMatch.forEach(function(hash, matchNumber) {
-				//TODO: add to "unknown" list for adding to blocks
-				userSubmittedHashes.push(hash);
-			});
+			console.log(e);
 		}
-		/**/
 		
 		ipfs.add(new Buffer(postText.toString()), function(err, res) {
 			if(err || !res)
