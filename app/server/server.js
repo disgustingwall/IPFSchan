@@ -879,14 +879,14 @@ function main()
 					{
 						addToPeerNodes(element);
 					}
-				}
+				});
 			}
 
 			if (dataObject.hasOwnProperty("Servers") && Array.isArray(dataObject["Servers"]))
 			{
 				dataObject["Servers"].forEach(function (element, elementNumber){
 					//pull URLs from element and do (bad) verification at the same time
-					var newURLmatch = element.match(/(((https?:\/\/)?(([\da-z\.-]+)\.([a-z\.]{2,6})))(:(\d+))?)([\/\w \.-]*)*\/?/g);
+					var newURLmatch = element.match(/(((https?:\/\/)?(([\da-z\.-]+)\.([a-z\.]{2,6})))(:(\d+))?)([\/\w \.-]*)/g);
 
 					if (newURLmatch)
 					{
@@ -909,7 +909,7 @@ function main()
 
 						console.log(JSON.stringify(peerSitesList));
 					}
-				}
+				});
 			}
 
 			if (dataObject.hasOwnProperty("Blocks") && Array.isArray(dataObject["Blocks"]))
@@ -929,7 +929,7 @@ function main()
 					{
 						postsToMerge.push(element);
 					}
-				}
+				});
 			}
 		}
 		catch (e)
