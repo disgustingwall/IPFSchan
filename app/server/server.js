@@ -524,6 +524,9 @@ function findOwnID()
 		
 		ownID = res["ID"];
 		
+		//pull own published information
+		publishBlockPull(ownID);
+		
 		return ownID;
 	});
 }
@@ -806,7 +809,6 @@ function main()
 	ipfs = ipfsAPI(cfgObject["ipfsAPI"]["domain"], cfgObject["ipfsAPI"]["port"], cfgObject["ipfsAPI"]["options"]);
 	
 	findOwnID();
-	publishBlockPull();
 	
 	
 	//add at least one post (only the empty hash) so that /newest always has content
