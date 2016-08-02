@@ -7,36 +7,32 @@ var https;
 var bodyParser;
 var multer;
 
-
-
 var app;
 var ipfs;
 
+//tracks when emergency refreshes are allowed to prevent minting in /uploaded from triggering multiple times
+var lastBlockRefresh = 0;
+var ownID = "";
+var newestBlock = "";
 
-//control to fill blockCreationTimes up with dummy values at startup to increase refresh rate or not
-var startQuick = true;
+var blockCreationTimes = [];
+var blocks = [];
+var foreignBlocks = [];
+var postsToMerge = [];
+var blocksToMerge = [];
+
+var cfgLocation = __dirname + "/configuration.json";
+
 //control what the minimum and maximum block creation time is, in miliseconds
 var minimumBlockTime = 10 * 1000; //ten seconds
 var maximumBlockTime = 60 * 60 * 1000; //one hour
 //set target for number of blocks per hour
 var targetBlocksPerHour = 6;
+//control to fill blockCreationTimes up with dummy values at startup to increase refresh rate or not
+var startQuick = true;
 
-//track when emergency refreshes are allowed to prevent minting in /uploaded from triggering multiple times
-var lastBlockRefresh = 0;
-
-var newestBlock = "";
-
-//list of peer sites
-var postsToMerge = [];
-var blocksToMerge = [];
-var blocks = [];
-var foreignBlocks = [];
-var userSubmittedHashes = [];
-var blockCreationTimes = [];
-//blank entries are to give the site respite if it has itself in its array
 var peerNodesList = [];
 var peerSitesList = ["https://ipfschan.herokuapp.com"];
-var ownID = "";
 
 function isEmpty(obj)
 {
@@ -280,7 +276,7 @@ function createBlockCallback()
 	}
 	
 	//only run if there is something to commit
-	if (blocksToMerge.length > 0 || postsToMerge.length > 0 || userSubmittedHashes.length > 0)
+	if (blocksToMerge.length > 0 || postsToMerge.length > 0)
 	{
 		var newBlockJSON = {};
 		var oldBlock = newestBlock.toString();
@@ -318,21 +314,6 @@ function createBlockCallback()
 			if (newBlockJSON["n"].length <= 0)
 			{
 				delete newBlockJSON["n"];
-			}
-		}
-		
-		if (userSubmittedHashes.length > 0)
-		{
-			newBlockJSON["u"] = userSubmittedHashes;
-			
-			userSubmittedHashes = [];
-			
-			//remove duplicates
-			newBlockJSON["u"] = filterDuplicates(newBlockJSON["u"]);
-			
-			if (newBlockJSON["u"].length <= 0)
-			{
-				delete newBlockJSON["u"];
 			}
 		}
 		
@@ -715,7 +696,7 @@ function main()
 {
 	var cfgContents = "";
 	var cfgObject = {};
-	
+
 	express = require('express');
 	ipfsAPI = require('ipfs-api');
 	fs = require('fs');
@@ -724,8 +705,120 @@ function main()
 	https = require('https');
 	bodyParser = require('body-parser');
 	multer = require('multer');
-	
-	
+
+
+	fs.readFile(cfgLocation, function (err, data){
+		if (err)
+		{
+			console.log("Error reading configuration file");
+			return console.log(err);
+		}
+
+		//try decode object
+		try
+		{
+			cfgObject = JSON.parse(data);
+		}
+		catch (e)
+		{
+			console.log("Error parsing configuration file");
+			return console.log(e);
+		}
+
+		return cfgObject;
+	});
+
+	//fill cfgObject with defaults
+	//IPFS options
+	if (!(cfgObject.hasOwnProperty("ipfsAPI") && cfgObject["ipfsAPI"]))
+	{
+		cfgObject["ipfsAPI"] = {};
+	}
+
+	if (!(cfgObject["ipfsAPI"].hasOwnProperty("domain") && cfgObject["ipfsAPI"]["domain"]))
+	{
+		cfgObject["ipfsAPI"]["domain"] = "localhost";
+	}
+
+	if (!(cfgObject["ipfsAPI"].hasOwnProperty("port") && cfgObject["ipfsAPI"]["port"]))
+	{
+		cfgObject["ipfsAPI"]["port"] = "5001";
+	}
+
+	if (!(cfgObject["ipfsAPI"].hasOwnProperty("options") && cfgObject["ipfsAPI"]["options"]))
+	{
+		cfgObject["ipfsAPI"]["options"] = {protocol: 'http'};
+	}
+
+	//other options
+	if (cfgObject.hasOwnProperty("minimumBlockTime") && cfgObject["minimumBlockTime"])
+	{
+		minimumBlockTime = cfgObject["minimumBlockTime"];
+	}
+	else
+	{
+		cfgObject["minimumBlockTime"] = minimumBlockTime;
+	}
+
+	if (cfgObject.hasOwnProperty("maximumBlockTime") && cfgObject["maximumBlockTime"])
+	{
+		maximumBlockTime = cfgObject["maximumBlockTime"];
+	}
+	else
+	{
+		 cfgObject["maximumBlockTime"] = maximumBlockTime;
+	}
+
+	if (cfgObject.hasOwnProperty("targetBlocksPerHour") && cfgObject["targetBlocksPerHour"])
+	{
+		targetBlocksPerHour = cfgObject["targetBlocksPerHour"];
+	}
+	else
+	{
+		 cfgObject["targetBlocksPerHour"] = targetBlocksPerHour;
+	}
+
+	if (cfgObject.hasOwnProperty("startQuick") && cfgObject["startQuick"])
+	{
+		startQuick = cfgObject["startQuick"];
+	}
+	else
+	{
+		 cfgObject["startQuick"] = startQuick;
+	}
+
+	if (cfgObject.hasOwnProperty("peerNodesList") && cfgObject["peerNodesList"])
+	{
+		peerNodesList = cfgObject["peerNodesList"];
+	}
+	else
+	{
+		 cfgObject["peerNodesList"] = peerNodesList;
+	}
+
+	if (cfgObject.hasOwnProperty("peerSitesList") && cfgObject["peerSitesList"])
+	{
+		peerSitesList = cfgObject["peerSitesList"];
+	}
+	else
+	{
+		 cfgObject["peerSitesList"] = peerSitesList;
+	}
+
+	//write configuration object
+	fs.writeFile(cfgLocation, JSON.stringify(cfgObject), function (err) {
+		if (err)
+		{
+			console.log("Error writing configuration file");
+			return console.log(err);
+		}
+		else
+		{
+			console.log("wrote configuration:");
+			return console.log(JSON.stringify(cfgObject));
+		}
+	});
+
 	//fill blockCreationTimes with dummy values to create baseline
 	var currentTime = Date.now();
 	//only if global variable is set
@@ -736,78 +829,55 @@ function main()
 			blockCreationTimes.push(currentTime + i * 60 * 1000);
 		}
 	}
-	
-	
-	//fill cfgObject with defaults
-	if (!cfgObject.hasOwnProperty("ipfsAPI"))
-	{
-		cfgObject["ipfsAPI"] = {};
-	}
-	
-	if (!cfgObject["ipfsAPI"].hasOwnProperty("domain") || cfgObject["ipfsAPI"]["domain"] === "")
-	{
-		cfgObject["ipfsAPI"]["domain"] = "localhost";
-	}
-	
-	if (!cfgObject["ipfsAPI"].hasOwnProperty("port")  || cfgObject["ipfsAPI"]["port"] === "")
-	{
-		cfgObject["ipfsAPI"]["port"] = "5001";
-	}
-	
-	if (!cfgObject["ipfsAPI"].hasOwnProperty("options"))
-	{
-		cfgObject["ipfsAPI"]["options"] = {protocol: 'http'};
-	}
-	
-	
-	
-	//set values from environment vars
-	//for if the ipfs node is behind tor
-	if (process.env.IPFSserviceID && process.env.IPFStorMirrorDomain)
-	{
-		cfgObject["ipfsAPI"]["domain"] = (process.env.IPFSserviceID + "." + process.env.IPFSdomain);
-	}
-	
-	//for if the ipfs node is at an IP
-	if (process.env.IPFSip)
-	{
-		cfgObject["ipfsAPI"]["domain"] = process.env.IPFSip;
-	}
-	
-	//if there is a hostname for the IPFS node
-	if (process.env.IPFShostname)
-	{
-		cfgObject["ipfsAPI"]["domain"] = process.env.IPFShostname;
-	}
-	
-	if (process.env.IPFSport)
-	{
-		cfgObject["ipfsAPI"]["port"] = process.env.IPFSport;
-	}
-	
-	if (process.env.IPFSoptions)
-	{
-		cfgObject["ipfsAPI"]["options"] = JSON.parse(process.env.IPFSoptions);
-	}
-	
-	
-	console.log("final config object: " + JSON.stringify(cfgObject));
-	
-	
+
 	fs.readFile("/tmp/IPFSchan/block/newest/newest.txt", function (err, data) {
 		if (err)
 		{
 			console.log("Error reading file that stores initial block");
 			return console.log(err);
 		}
+
 		maybeAddAsNewest(data.toString());
-		console.log("newestBlock: " + newestBlock);
+		return console.log("newestBlock: " + newestBlock);
 	});
-	
-	
+
+
+	//set values from environment vars
+	//for if the ipfs node is behind tor
+	if (process.env.IPFSserviceID && process.env.IPFStorMirrorDomain)
+	{
+		cfgObject["ipfsAPI"]["domain"] = (process.env.IPFSserviceID + "." + process.env.IPFSdomain);
+	}
+
+	//for if the ipfs node is at an IP
+	if (process.env.IPFSip)
+	{
+		cfgObject["ipfsAPI"]["domain"] = process.env.IPFSip;
+	}
+
+	//if there is a hostname for the IPFS node
+	if (process.env.IPFShostname)
+	{
+		cfgObject["ipfsAPI"]["domain"] = process.env.IPFShostname;
+	}
+
+	if (process.env.IPFSport)
+	{
+		cfgObject["ipfsAPI"]["port"] = process.env.IPFSport;
+	}
+
+	if (process.env.IPFSoptions)
+	{
+		cfgObject["ipfsAPI"]["options"] = JSON.parse(process.env.IPFSoptions);
+	}
+
+
+	console.log("final configuration object: " + JSON.stringify(cfgObject));
+
+
 	app = express();
 	ipfs = ipfsAPI(cfgObject["ipfsAPI"]["domain"], cfgObject["ipfsAPI"]["port"], cfgObject["ipfsAPI"]["options"]);
-	
+
 	findOwnID();
 	
 	
