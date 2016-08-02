@@ -1,1 +1,0 @@
-{"ipfsAPI":{"domain":"localhost","port":"5001","options":{"protocol":"http"}},"minimumBlockTime":10000,"maximumBlockTime":3600000,"targetBlocksPerHour":6,"startQuick":true,"peerNodesList":[],"peerSitesList":["https://ipfschan.herokuapp.com"]}
