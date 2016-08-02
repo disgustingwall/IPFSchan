@@ -12,16 +12,12 @@ var ipfs;
 
 //tracks when emergency refreshes are allowed to prevent minting in /uploaded from triggering multiple times
 var lastBlockRefresh = 0;
-var ownID = "";
-var newestBlock = "";
-
 var blockCreationTimes = [];
 var blocks = [];
 var foreignBlocks = [];
 var postsToMerge = [];
 var blocksToMerge = [];
-
-var cfgLocation = __dirname + "/configuration.json";
+var ownID = "";
 
 //control what the minimum and maximum block creation time is, in miliseconds
 var minimumBlockTime = 10 * 1000; //ten seconds
@@ -33,6 +29,11 @@ var startQuick = true;
 
 var peerNodesList = [];
 var peerSitesList = ["https://ipfschan.herokuapp.com"];
+
+var newestBlock = "";
+
+var cfgLocation = __dirname + "/configuration.json";
+
 
 function isEmpty(obj)
 {
@@ -455,7 +456,7 @@ function maybeAddAsNewest (data)
 	}
 	
 	console.log("newestBlock: " + newestBlock);
-	console.log("JSON.stringify(blocksToMerge) " + JSON.stringify(blocksToMerge));
+	console.log("JSON.stringify(blocksToMerge): " + JSON.stringify(blocksToMerge));
 }
 
 function filterDuplicates(arr)
@@ -706,6 +707,7 @@ function main()
 	bodyParser = require('body-parser');
 	multer = require('multer');
 
+	
 
 	fs.readFile(cfgLocation, function (err, data){
 		if (err)
@@ -805,6 +807,25 @@ function main()
 		 cfgObject["peerSitesList"] = peerSitesList;
 	}
 
+	//TODO: have newest.txt location be configurable?
+	fs.readFile("/tmp/IPFSchan/block/newest/newest.txt", function (err, data) {
+		if (err)
+		{
+			console.log("Error reading file that stores initial block");
+			return console.log(err);
+		}
+
+		maybeAddAsNewest(data.toString());
+		return console.log("newestBlock: " + newestBlock);
+	});
+
+	if (cfgObject.hasOwnProperty("newestBlock") && cfgObject["newestBlock"])
+	{
+		maybeAddAsNewest(cfgObject["newestBlock"]);
+	}
+
+	cfgObject["newestBlock"] = newestBlock;
+	
 	//write configuration object
 	fs.writeFile(cfgLocation, JSON.stringify(cfgObject), function (err) {
 		if (err)
@@ -814,6 +835,7 @@ function main()
 		}
 		else
 		{
+			//TODO: delete newest.txt?
 			console.log("wrote configuration:");
 			return console.log(JSON.stringify(cfgObject));
 		}
@@ -830,17 +852,7 @@ function main()
 		}
 	}
 
-	fs.readFile("/tmp/IPFSchan/block/newest/newest.txt", function (err, data) {
-		if (err)
-		{
-			console.log("Error reading file that stores initial block");
-			return console.log(err);
-		}
-
-		maybeAddAsNewest(data.toString());
-		return console.log("newestBlock: " + newestBlock);
-	});
-
+	
 
 	//set values from environment vars
 	//for if the ipfs node is behind tor
