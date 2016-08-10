@@ -996,6 +996,7 @@ function main()
 					if (element.length === 46)
 					{
 						addToPeerNodes(element);
+						console.log("added ID from post");
 					}
 				});
 			}
@@ -1026,6 +1027,7 @@ function main()
 						peerSitesList = filterDuplicates(peerSitesList);
 
 						console.log(JSON.stringify(peerSitesList));
+						console.log("added site from post");
 					}
 				});
 			}
@@ -1036,6 +1038,7 @@ function main()
 					if (element.length === 46)
 					{
 						blocksToMerge.push(element);
+						console.log("added block from post");
 					}
 				});
 			}
@@ -1046,6 +1049,7 @@ function main()
 					if (element.length === 46)
 					{
 						postsToMerge.push(element);
+						console.log("added post from post");
 					}
 				});
 			}
