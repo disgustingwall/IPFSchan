@@ -693,6 +693,42 @@ function delayKill(exitCode)
 	setTimeout(delayedKill, 10 * 1000, exitCode);
 }
 
+function postIDToServers()
+{
+	var postObject = {};
+	postObject["IDs"] = [ownID];
+	//TODO: add block reference
+	//TODO: add site entry if we have it
+
+	var postText = "postText=" + JSON.stringify(postObject);
+	var postOptions = {
+		path: '/uploaded',
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded',
+			'Content-Length': Buffer.byteLength(postText)
+		}
+	};
+
+	for (var i = 0; i < peerSitesList.length; i++)
+	{
+		try
+		{
+			postOptions["host"] = peerSitesList[i].replace(/http(s)?\:/, "").replace(/\/\//, "");
+
+			var postRequest = http.request(postOptions);
+
+			postRequest.write(postText);
+			postRequest.end();
+		}
+		catch (e)
+		{
+			console.log("An error occured while trying to share our ID to public servers");
+			console.log(e);
+		}
+	}
+}
+
 function main()
 {
 	var cfgContents = "";
@@ -951,7 +987,7 @@ function main()
 		//attempt to parse response text, and pull IDs/URLs/hashes if valid
 		try
 		{
-			var dataObject = JSON.stringify(postText);
+			var dataObject = JSON.parse(postText);
 
 			//add IDs to peer nodes
 			if (dataObject.hasOwnProperty("IDs") && Array.isArray(dataObject("IDs")))
@@ -1261,6 +1297,10 @@ function main()
 	var server = app.listen(app.get('port'), function() {
 		console.log('Node app is running on port', app.get('port'));
 	});
+
+	//TODO: make this dependent on a config variable
+	//make POST request to built in servers with own node ID
+	postIDToServers();
 	
 	process.on('SIGTERM', function () {
 		console.log("Received SIGTERM. Closing server with orders to exit process afterwards");
