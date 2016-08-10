@@ -53,15 +53,19 @@ If you have a node set up on another server, you will need to set the environmen
 
 To set these variables and start the server on a single line, enter the following command with your own information included: `IPFSip=192.0.2.0 IPFSport=5001 node ./app/server/server.js`
 
-This will allow the server to post to the IPFS network, but it will not allow your server to find content posted from other servers, and it will not allow other servers to find the content you post. In order to accomplish this, you must post your server's address on other servers, and vice versa. However, this is not done through the normal posting page, since parsing every post for data results in many false positives. To tell your server to pull from another server, navigate to [http://localhost:12462/upload.html](http://localhost:12462/upload.html) and enter a JSON block containing the foreign server's address, like so:
+This will allow the server to post to the IPFS network.
 
-    {Servers:[https://ipfschan.herokuapp.com]}
+If you have altered the configuration file and removed all servers from it, you will need to manually share your server's hostname, IP, or IPFS node ID so that other servers will merge your users' data with its own. 
+
+In order to accomplish this, you must post your server's address on other servers. However, this is not done through the normal posting page, since parsing every post for data has resulted in many false positives. To tell your server to pull from another server, navigate to [http://localhost:12462/upload.html](http://localhost:12462/upload.html) and enter a JSON block containing the foreign server's address, like so:
+
+    {"Servers":["https://ipfschan.herokuapp.com"]}
 
 upload.html doesn't change or package what you enter in any way, so anything you post will be read by the server in exactly that form. 
 
-Do the same on the foreign server you want to pull from your server: go to the server's upload.html page, and in the text box enter your server's publicly available hostname or ip, including any port requirements (other than port 80), like so: 
+Do the same on the foreign server you want to pull from your server: go to the server's upload.html page, and in the text box enter your server's publicly available hostname or ip, including any port requirements (if port 80, it's optional), like so: 
 
-    {Servers:[http://192.0.2.0:8080]}
+    {"Servers":["http://192.0.2.0:8080"]}
 
 Be sure to include any nesecary port numbers. 
 
@@ -76,7 +80,7 @@ The server also parses the following tags: `IDs`, `Blocks`, and `Posts`. These s
 
 Here's an example of all the tags in use: 
 
-    {IDs:["QmTJvweGd7xBhfz1pPQYbrbPGrFT1A8aZWCFXDZyTdJYQR"], Servers:["https://example.org"], Blocks:["QmT5Hf1LyA1USWZfHX45NdCn4bUUmW3fAthgfbNnFJ6Amh"], Posts:["QmT5Hf1LyA1USWZfHX45NdCn4bUUmW3fAthgfbNnFJ6Amh"]}
+    {"IDs":["QmTJvweGd7xBhfz1pPQYbrbPGrFT1A8aZWCFXDZyTdJYQR"], "Servers":["https://example.org"], "Blocks":["QmT5Hf1LyA1USWZfHX45NdCn4bUUmW3fAthgfbNnFJ6Amh"], "Posts":["QmT5Hf1LyA1USWZfHX45NdCn4bUUmW3fAthgfbNnFJ6Amh"]}
 
 #####IDs
 
