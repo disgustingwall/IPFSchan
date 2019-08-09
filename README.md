@@ -93,4 +93,4 @@ If you publish a post or create a block on your own, you can tell a server to ad
 
 Every tag actually contains an array, so you can send multiple objects to a server at once: 
 
-    {Servers: ["example.net", "example.org"]}
+    {Servers: ["example.org", "example.net", "example.com"]}
