@@ -1,21 +1,17 @@
 # IPFSchan
 Distributed messageboard
 
+## Usage:
 
-##Usage:
+IPFSchan can be used at several different levels: user, archivalist, or server operator. Each usage level builds on the last, and every step you take makes you a more effective participant. 
 
-IPFSchan can be used at several different levels: user, archivalist, or server operator. 
-
-Each usage level builds on the last, and every step you take makes you a more effective participant. 
-
-###Level 1: User
+### Level 1: User
 
 The very act of using IPFSchan is helpful. Files are served through the IPFS network, meaning they are backed up on the server the client is using, the server where the content was posted, and every node that connects the two. 
 
 This level of usage doesn't require any technical skills. Simply access a functioning server (such as [https://ipfschan.herokuapp.com](https://ipfschan.herokuapp.com)) and browse to your heart's content. Everything you view is automatically backed up on the IPFS network. 
 
-
-###Level 2: Archivalist
+### Level 2: Archivalist
 
 This level of usage requires some technical know-how, but not much. 
 
@@ -35,8 +31,7 @@ Your web browser will still query for new content directly from another server, 
 
 Note that IPFS sometimes cleans its cache of content that hasn't been accessed recently as the cache grows. This is normal behavior, but be aware that your local archive is not permanent. If you want to permanently archive your data, you must take extra steps to make backups of your IPFS cache or save content you find interesting. 
 
-
-###Level 3: Server Operator
+### Level 3: Server Operator
 
 This level of usage has more significant setup time, but the main requirements are still rather easy to accomplish. 
 
@@ -45,7 +40,7 @@ Running a server means that you can submit new content to IPFSchan without using
 The server software is located at `app/server/server.js` in this repository. To run this file, you must install nodeJS and update it to version 4.0.0 or greater. 
 To run the server on linux, run the command `node ./app/server/server.js` from a terminal where the current directory is the IPFSchan project's root folder. This will start the server, available at [http://localhost:12462](http://localhost:12462).
 
-However, there are additional setup steps required at this point. Mainly, you must tell your server of a functioning IPFS node to use. 
+However, there are additional setup steps required at this point. Mainly, you must tell your server of a functioning IPFS node to use. If you have set up an IPFS node in level 2 above on the same machine as the server, that will work without extra configuration. If you have a node set up on another server, you will need to set the environment variables "IPFShostname" or "IPFSip", and "IPFSport". IPFSport should probably be 5001, but IPFShostname or IPFSip need to be the hostname or ip of your IPFS node that is accessible by your server. For example, your IPFSip setting might be "198.51.100.0" if that were the ip of your IPFS node, or "mynode.example.org" if you're using a DNS service, or some other configuration that resolves to an ip. To do this one a single line, enter the following command with your own information included: `IPFSip=192.168.1.32 IPFSport=5001 node ./app/server/server.js`
 
 If you have set up an IPFS node in level 2 above on the same machine as the server, that will work with the default configuration. 
 
@@ -69,10 +64,9 @@ Do the same on the foreign server you want to pull from your server: go to the s
 
 Be sure to include any nesecary port numbers. 
 
-
 The two servers should now pull blocks from each other periodically and merge their content listings. 
 
-####Sharing more data
+#### Sharing more data
 
 You can also share other data with servers this way. Most information will propagate between servers if they can successfully load each other's pages, but this can offer an alternate way to start sharing data, or allow people running nodes, but not servers, to add blocks and posts. 
 
@@ -82,7 +76,7 @@ Here's an example of all the tags in use:
 
     {"IDs":["QmTJvweGd7xBhfz1pPQYbrbPGrFT1A8aZWCFXDZyTdJYQR"], "Servers":["https://example.org"], "Blocks":["QmT5Hf1LyA1USWZfHX45NdCn4bUUmW3fAthgfbNnFJ6Amh"], "Posts":["QmT5Hf1LyA1USWZfHX45NdCn4bUUmW3fAthgfbNnFJ6Amh"]}
 
-#####IDs
+##### IDs
 
 Sharing an ID with a server will cause that server to pull data directly from the corresponding IPFS node through a process called publishing. 
 
@@ -90,11 +84,11 @@ An IPFS node can list an IPFS object that is referred to by its ID. IPFSchan use
 
 Because of this, giving a server your IPFS node ID will allow it to download your server's post directory and other data completely within the IPFS network. 
 
-#####Blocks and Posts
+##### Blocks and Posts
 
 If you publish a post or create a block on your own, you can tell a server to add that to the public directory through these tags. 
 
-#####Additional notes
+##### Additional notes
 
 Every tag actually contains an array, so you can send multiple objects to a server at once: 
 
