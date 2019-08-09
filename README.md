@@ -1,18 +1,16 @@
 # IPFSchan
 Distributed messageboard
 
-
-Usage:
+## Usage:
 
 IPFSchan can be used at several different levels: user, archivalist, or server operator. Each usage level builds on the last, and every step you take makes you a more effective user. 
 
-Level 1: User
+### Level 1: User
 
 The very act of using IPFSchan is helpful. Files are served through the IPFS network, meaning they are backed up on the server the client is using, the server where the content was posted, and every node that connects the two. 
 This level of usage doesn't require any technical skills. Simply access a functioning server (such as https://ipfschan.herokuapp.com) and browse to your heart's content. Everything you view is automatically backed up on the IPFS network. 
 
-
-Level 2: Archivalist
+### Level 2: Archivalist
 
 This level of usage requires some technical know-how, but not much. 
 
@@ -26,8 +24,7 @@ Once you have set up your IPFS node and have it running, navigate to a functioni
 Your web browser will still query for new content directly from another server, but the content you view is saved on your own machine, meaning it is safe from network problems or deletion. 
 Note that IPFS sometimes cleans its cache of content that hasn't been accessed recently as the cache grows. This is normal behavior, but be aware that your local archive is not permanent. If you want to permanently archive your data, you must take extra steps to make backups of your IPFS cache or save content you find interesting. 
 
-
-Level 3: Server Operator
+### Level 3: Server Operator
 
 This level of usage has more significant setup time, but the main requirements are still rather easy to set up. 
 
@@ -40,11 +37,8 @@ However, there are additional setup steps required at this point. Mainly, you mu
 
 This will allow you to post to the IPFS network, but it will not allow your server to find content posted from other servers, and it will not allow other servers to find the content you post. In order to accomplish this, you must post your server's address on other servers, and vice versa. However, this is not done through the normal posting page, as all content posted through the index.html file in this repository is encrypted and unreadable by the server. To tell your server to pull from another server, navigate to http://localhost:12462/upload.html and enter the foreign server's address. upload.html doesn't encrypt any content, so anything you post can be read by the server. 
 
-
 On your local server's upload.html page, enter the foreign server's URL like so: https://ipfschan.herokuapp.com (including the protocol)
 
-
 Do the same on the foreign server you want to pull from your server: go to the server's upload.html page, and in the text box enter your server's publicly available hostname or ip, including any port requirements (other than port 80), like so: http://203.0.113.0:8080
-
 
 The two servers should now pull blocks from each other periodically and merge their content listings. 
