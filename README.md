@@ -9,7 +9,7 @@ IPFSchan can be used at several different levels: user, archivalist, or server o
 
 The very act of using IPFSchan is helpful. Files are served through the IPFS network, meaning they are backed up on the server the client is using, the server where the content was posted, and every node that connects the two. 
 
-This level of usage doesn't require any technical skills. Simply access a functioning server (such as [https://ipfschan.herokuapp.com](https://ipfschan.herokuapp.com)) and browse to your heart's content. Everything you view is automatically backed up on the IPFS network. 
+This level of usage doesn't require any technical skills. Simply access a functioning server (such as https://ipfschan.herokuapp.com) and browse to your heart's content. Everything you view is automatically backed up on the IPFS network. 
 
 ### Archivalist
 
@@ -17,13 +17,13 @@ This level of usage requires some technical know-how, but not much.
 
 Since all content is stored on nodes of the IPFS network, setting up your own node and using it for browsing allows you to save the content you view to your own computer automatically. 
 
-To set up your own node, go to [https://ipfs.io/docs/install/](https://ipfs.io/docs/install/) and install an IPFS node on your computer. The correct choice for you depends on your operating system. Installation instructions should be on the download page and in the file you download. 
+To set up your own node, go to https://ipfs.io/docs/install/ and install an IPFS node on your computer. The correct choice for you depends on your operating system. Installation instructions should be on the download page and in the file you download. 
 
 Once you've installed an IPFS node, start it up. On linux, this is done through running the command `ipfs daemon` on a terminal. 
 
 You may be prompted to initialize your IPFS cache if you have recently installed IPFS or something has gone wrong. Know that this is fine as long as you have never loaded any content through IPFS, but doing so while you have content stored locally will delete it permanently! 
 
-Once you have set up your IPFS node and have it running, navigate to a functioning server (such as [https://ipfschan.herokuapp.com](https://ipfschan.herokuapp.com)). Once the page loads, change the domain to `localhost:8080`. If your IPFS node is set up correctly, the page should reload after a delay and should look exactly the same. Now when you view a post, it will be downloaded directly to your computer and saved there. 
+Once you have set up your IPFS node and have it running, navigate to a functioning server (such as https://ipfschan.herokuapp.com). Once the page loads, change the domain to `localhost:8080`. If your IPFS node is set up correctly, the page should reload after a delay and should look exactly the same. Now when you view a post, it will be downloaded directly to your computer and saved there. 
 
 Your web browser will still query for new content directly from another server, but the content you view is saved on your own machine, meaning it is safe from network problems or deletion. 
 
@@ -37,7 +37,7 @@ Running a server means that you can submit new content to IPFSchan without using
 
 The server software is located at `app/server/server.js` in this repository. To run this file, you must install nodeJS and update it to version 4.0.0 or greater. 
 
-To run the server on linux, run the command `node ./app/server/server.js` from a terminal where the current directory is the IPFSchan project's root folder. This will start the server, available at [http://localhost:12462](http://localhost:12462).
+To run the server on linux, run the command `node ./app/server/server.js` from a terminal where the current directory is the IPFSchan project's root folder. This will start the server, available at http://localhost:12462.
 
 However, there are additional setup steps required at this point. Mainly, you must tell your server of a functioning IPFS node to use. 
 
@@ -53,15 +53,15 @@ This will allow the server to post to the IPFS network.
 
 If you have altered the configuration file and removed all servers from it, you will need to manually share your server's hostname, IP, or IPFS node ID so that other servers will merge your users' data with its own. 
 
-In order to accomplish this, you must post your server's address on other servers. However, this is not done through the normal posting page, since parsing every post for data has resulted in many false positives. To tell your server to pull from another server, navigate to [http://localhost:12462/upload.html](http://localhost:12462/upload.html) and enter a JSON block containing the foreign server's address, like so:
+In order to accomplish this, you must post your server's address on other servers. However, this is not done through the normal posting page, since parsing every post for data has resulted in many false positives. To tell your server to pull from another server, navigate to http://localhost:12462/upload.html and enter a JSON block containing the foreign server's address, like so:
 
-    {"Servers":["https://ipfschan.herokuapp.com"]}
+    {"Servers": ["https://ipfschan.herokuapp.com"]}
 
 The upload.html page doesn't change or package what you enter in any way, so anything you post will be read by the server in exactly that form. 
 
 Do the same on the foreign server you want to pull from your server: go to the server's upload.html page, and in the text box enter your server's publicly available hostname or ip, including any port requirements like so: 
 
-    {"Servers":["http://192.0.2.0:8080"]}
+    {"Servers": ["http://192.0.2.0:8080"]}
 
 Be sure to include any nesecary port numbers, although submissions without port numbers are assumed to be accessible through port 80. 
 
