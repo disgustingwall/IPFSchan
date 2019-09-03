@@ -1,10 +1,10 @@
 {
   "name": "IPFSchan",
   "version": "2.0.0",
-  "description": "",
-  "main": "./app/server/server.js",
+  "description": "A distributed messageboard where the act of viewing is an act of archival",
+  "main": "app/server/server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node app/server/server.js"
   },
   "dependencies": {
     "express": "4.13.3",
@@ -21,8 +21,11 @@
     "url": "https://github.com/disgustingwall/IPFSchan/"
   },
   "keywords": [
+    "IPFS",
+    "messageboard",
+    "forum",
     "node",
     "express"
   ],
-  "license": ""
+  "license": "GPL-3.0-or-later"
 }

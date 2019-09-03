@@ -1,8 +1,6 @@
 {
   "name": "IPFSchan",
-  "description": "a server for IPFS messaging",
+  "description": "A distributed messageboard where the act of viewing is an act of archival",
   "repository": "https://github.com/disgustingwall/IPFSchan/",
-  "logo": "",
-  "keywords": ["IPFS", "express"],
-  "image": ""
+  "keywords": ["IPFS", "messageboard", "forum", "express"]
 }
